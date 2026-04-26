@@ -1,0 +1,122 @@
+@import "tailwindcss";
+
+:root {
+  /* BACKGROUNDS */
+  --bg-outer:          #D0D6E5;
+  --bg-app:            #D0D6E5;
+  --bg-card:           #FFFFFF;
+  --bg-sidebar:        #FFFFFF;
+  --bg-card-hover:     #F8F9FC;
+  --bg-table-row:      #F8F9FC;
+  --bg-input:          #FFFFFF;
+  --bg-tooltip:        #1A233A;
+
+  /* PRIMARY / BRAND */
+  --primary:           #5B4D99;
+  --primary-mid:       #6B5EAA;
+  --primary-light:     #887CC5;
+  --primary-pale:      #D4D0E5;
+  --primary-ghost:     #EBE9F5;
+
+  /* TEXT */
+  --text-heading:      #1A233A;
+  --text-body:         #1A233A;
+  --text-secondary:    #7788B3;
+  --text-muted:        #A8B3D2;
+  --text-on-primary:   #FFFFFF;
+  --text-link:         #5B4D99;
+
+  /* STATUS & ACCENTS */
+  --green:             #50AD0F;
+  --green-light:       #D4EDBC;
+  --red:               #AE1329;
+  --pink:              #9F4D57;
+  --pink-light:        #F2B5C3;
+  --yellow:            #F5D556;
+  --danger:            #E05252;
+  --accent-teal:       #3E4D4E;
+
+  /* BORDERS & DIVIDERS */
+  --border:            #A8B3D2;
+  --border-light:      #D0D6E5;
+  --border-focus:      #5B4D99;
+
+  /* CHART */
+  --chart-line-1:      #5B4D99;
+  --chart-fill-1:      rgba(91, 77, 153, 0.18);
+  --chart-line-2:      #3E4D4E;
+  --chart-grid:        #A8B3D2;
+  --chart-axis:        #A8B3D2;
+
+  /* SIDEBAR ICONS */
+  --icon-active-bg:    #FFFFFF;
+  --icon-active:       #5B4D99;
+  --icon-inactive:     #7788B3;
+  --icon-logout:       #E05252;
+
+  /* SHADOWS */
+  --shadow-card:       0 2px 12px rgba(91, 77, 153, 0.06);
+  --shadow-elevated:   0 4px 24px rgba(91, 77, 153, 0.12);
+  --shadow-btn:        0 2px  8px rgba(91, 77, 153, 0.25);
+}
+
+@theme inline {
+  --color-bg-outer: var(--bg-outer);
+  --color-bg-app: var(--bg-app);
+  --color-bg-card: var(--bg-card);
+  --color-bg-sidebar: var(--bg-sidebar);
+  --color-bg-card-hover: var(--bg-card-hover);
+  --color-bg-table-row: var(--bg-table-row);
+  --color-bg-input: var(--bg-input);
+  --color-bg-tooltip: var(--bg-tooltip);
+
+  --color-primary: var(--primary);
+  --color-primary-mid: var(--primary-mid);
+  --color-primary-light: var(--primary-light);
+  --color-primary-pale: var(--primary-pale);
+  --color-primary-ghost: var(--primary-ghost);
+
+  --color-text-heading: var(--text-heading);
+  --color-text-body: var(--text-body);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-text-on-primary: var(--text-on-primary);
+  --color-text-link: var(--text-link);
+
+  --color-green: var(--green);
+  --color-green-light: var(--green-light);
+  --color-red: var(--red);
+  --color-pink: var(--pink);
+  --color-pink-light: var(--pink-light);
+  --color-yellow: var(--yellow);
+  --color-danger: var(--danger);
+
+  --color-border: var(--border);
+  --color-border-light: var(--border-light);
+  --color-border-focus: var(--border-focus);
+
+  --color-chart-line-1: var(--chart-line-1);
+  --color-chart-fill-1: var(--chart-fill-1);
+  --color-chart-line-2: var(--chart-line-2);
+  --color-chart-grid: var(--chart-grid);
+  --color-chart-axis: var(--chart-axis);
+
+  --color-icon-active-bg: var(--icon-active-bg);
+  --color-icon-active: var(--icon-active);
+  --color-icon-inactive: var(--icon-inactive);
+  --color-icon-logout: var(--icon-logout);
+
+  --shadow-card: var(--shadow-card);
+  --shadow-elevated: var(--shadow-elevated);
+  --shadow-btn: var(--shadow-btn);
+  
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--color-bg-main);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  min-height: 100vh;
+}
