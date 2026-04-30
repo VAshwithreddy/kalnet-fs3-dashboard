@@ -24,4 +24,6 @@ export const patchUserSchema = z
     role: z.enum(["ADMIN", "STAFF"]).optional(),
     status: z.enum(["ACTIVE", "INACTIVE"]).optional(),
   })
-  .refine((obj) => Object.keys(obj).length > 0, "At least one field is required");
+  .refine((obj: Record<string, unknown>) => Object.keys(obj).length > 0, {
+    message: "At least one field is required",
+  });
