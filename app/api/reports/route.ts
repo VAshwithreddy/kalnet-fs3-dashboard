@@ -5,6 +5,7 @@ import { parseISODate } from "@/lib/date";
 import { getReport } from "@/services/reports.service";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   try {

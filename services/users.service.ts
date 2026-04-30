@@ -1,5 +1,11 @@
 import { prisma } from "@/lib/prisma";
 
+export function listUsers() {
+  return prisma.user.findMany({
+    orderBy: { createdAt: "desc" },
+  });
+}
+
 export function createUser(data: {
   email: string;
   name: string;

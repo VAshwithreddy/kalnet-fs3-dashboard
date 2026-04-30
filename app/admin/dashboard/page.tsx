@@ -58,7 +58,7 @@ export default function AdminDashboardPage() {
             </div>
             <div className="rounded-2xl bg-slate-50/80 p-4">
               <p className="font-medium text-[var(--ink-strong)]">Data layer</p>
-              <p className="mt-2">Prisma is configured for local SQLite development and future service expansion.</p>
+              <p className="mt-2">Prisma is configured for MySQL-backed dashboard APIs and future service expansion.</p>
             </div>
           </div>
         </div>

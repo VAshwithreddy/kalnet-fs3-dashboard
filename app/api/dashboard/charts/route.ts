@@ -4,6 +4,7 @@ import { badRequest, serverError } from "@/lib/errors";
 import { getDashboardCharts } from "@/services/dashboard.service";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   try {

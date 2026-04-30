@@ -2,9 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { createUserSchema } from "@/lib/validators";
 import { badRequest, serverError } from "@/lib/errors";
-import { createUser } from "@/services/users.service";
+import { createUser, listUsers } from "@/services/users.service";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+export async function GET() {
+  try {
+    const users = await listUsers();
+    return NextResponse.json({ users });
+  } catch (e: unknown) {
+    return serverError("Failed to load users", String(e));
+  }
+}
 
 export async function POST(req: NextRequest) {
   try {

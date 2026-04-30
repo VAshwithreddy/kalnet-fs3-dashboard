@@ -10,10 +10,13 @@ Production-ready starter repository for a full-stack dashboard built with Next.j
 
 ## Local setup
 
+Create a local MySQL database first, then copy the sample environment file and update `DATABASE_URL`.
+
 ```bash
 npm install
 copy .env.example .env
 npm run prisma:generate
+npm run prisma:migrate:dev
 npm run dev
 ```
 

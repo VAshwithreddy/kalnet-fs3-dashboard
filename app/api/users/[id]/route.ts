@@ -5,6 +5,7 @@ import { badRequest, serverError } from "@/lib/errors";
 import { patchUser } from "@/services/users.service";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   try {
