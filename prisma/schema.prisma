@@ -3,29 +3,158 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
 enum Role {
   ADMIN
-  ANALYST
-  VIEWER
+  STAFF
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum StudentStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum InvoiceStatus {
+  ISSUED
+  VOID
+}
+
+enum PaymentStatus {
+  SUCCESS
+  FAILED
+  REFUNDED
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String
-  role      Role     @default(VIEWER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id        Int        @id @default(autoincrement())
+  email     String     @unique @db.VarChar(191)
+  name      String     @db.VarChar(120)
+  role      Role       @default(STAFF)
+  status    UserStatus @default(ACTIVE)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@index([role])
+  @@index([status])
+  @@map("users")
 }
 
-model Report {
-  id          String   @id @default(cuid())
-  title       String
-  status      String
-  generatedAt DateTime @default(now())
-  createdBy   String
+model Student {
+  id          Int           @id @default(autoincrement())
+  admissionNo String?       @unique @db.VarChar(50)
+  firstName   String        @db.VarChar(100)
+  lastName    String        @db.VarChar(100)
+  status      StudentStatus @default(ACTIVE)
+  createdAt   DateTime      @default(now())
+
+  admissions  Admission[]
+  invoices    FeeInvoice[]
+  payments    FeePayment[]
+  leaves      LeaveRequest[]
+
+  @@index([status])
+  @@map("students")
+}
+
+model Admission {
+  id         Int      @id @default(autoincrement())
+  studentId  Int
+  admittedAt DateTime @default(now())
+  admitYm    String   @db.VarChar(7) // YYYY-MM
+
+  student    Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([admittedAt])
+  @@index([admitYm])
+  @@index([studentId])
+  @@map("admissions")
+}
+
+model ApprovalRequest {
+  id        Int            @id @default(autoincrement())
+  type      String         @db.VarChar(50)
+  status    ApprovalStatus @default(PENDING)
+  createdAt DateTime       @default(now())
+  resolvedAt DateTime?
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([type])
+  @@map("approval_requests")
+}
+
+model LeaveRequest {
+  id        Int         @id @default(autoincrement())
+  studentId Int
+  fromDate  DateTime
+  toDate    DateTime
+  reason    String?     @db.VarChar(255)
+  status    LeaveStatus @default(PENDING)
+  createdAt DateTime    @default(now())
+
+  student   Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([studentId])
+  @@map("leave_requests")
+}
+
+model FeeInvoice {
+  id          Int           @id @default(autoincrement())
+  studentId   Int
+  issueDate   DateTime      @default(now())
+  dueDate     DateTime?
+  totalAmount Decimal       @db.Decimal(10, 2)
+  status      InvoiceStatus @default(ISSUED)
+
+  student     Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  payments    FeePayment[]
+
+  @@index([studentId])
+  @@index([issueDate])
+  @@index([status])
+  @@map("fee_invoices")
+}
+
+model FeePayment {
+  id        Int           @id @default(autoincrement())
+  invoiceId Int
+  studentId Int
+  paidAt    DateTime      @default(now())
+  amount    Decimal       @db.Decimal(10, 2)
+  status    PaymentStatus @default(SUCCESS)
+  method    String?       @db.VarChar(30)
+  reference String?       @db.VarChar(100)
+  paidYm    String        @db.VarChar(7) // YYYY-MM
+
+  invoice   FeeInvoice    @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  student   Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([paidAt])
+  @@index([paidYm])
+  @@index([status])
+  @@index([invoiceId])
+  @@index([studentId])
+  @@map("fee_payments")
 }
