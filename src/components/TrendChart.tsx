@@ -1,25 +1,46 @@
 "use client";
 
-import React, { PureComponent } from 'react';
-import { ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, CartesianAxis } from 'recharts';
-
-const data = [
-  { month: 'Jan', admissions: 120, fees: 45000 },
-  { month: 'Feb', admissions: 98, fees: 38000 },
-  { month: 'Mar', admissions: 150, fees: 55000 },
-  { month: 'Apr', admissions: 130, fees: 48000 },
-  { month: 'May', admissions: 110, fees: 42000 },
-  { month: 'Jun', admissions: 170, fees: 65000 },
-  { month: 'Jul', admissions: 90, fees: 31000 },
-];
+import React, { useState, useEffect } from 'react';
+import { ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 export function TrendChart() {
+  const [chartData, setChartData] = useState<any[]>([]);
+
+  useEffect(() => {
+    async function fetchCharts() {
+      try {
+        const res = await fetch("/api/dashboard/charts?months=6");
+        if (res.ok) {
+          const data = await res.json();
+          // Merge data
+          const merged: Record<string, any> = {};
+          
+          data.admissionsMonthly?.forEach((item: any) => {
+            merged[item.month] = { month: item.month, admissions: item.count, fees: 0 };
+          });
+          
+          data.feeCollectionMonthly?.forEach((item: any) => {
+            if (!merged[item.month]) {
+              merged[item.month] = { month: item.month, admissions: 0, fees: 0 };
+            }
+            merged[item.month].fees = item.total;
+          });
+          
+          setChartData(Object.values(merged));
+        }
+      } catch (e) {
+        console.error("Failed to fetch charts", e);
+      }
+    }
+    fetchCharts();
+  }, []);
+
   return (
-    <div className="bg-bg-card border border-border flex flex-col p-6 rounded-2xl h-80 w-full mt-6 shadow-shadow-card mb-6 lg:mb-0">
+    <div className="bg-bg-card border border-border flex flex-col p-6 rounded-2xl h-80 w-full mt-6 shadow-shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-shadow-elevated hover:bg-bg-card-hover mb-6 lg:mb-0">
       <div className="text-text-heading font-semibold mb-4 text-left ml-4">Admissions vs Pending Fees (Monthly)</div>
       <ResponsiveContainer width="100%" height="90%">
         <ComposedChart
-          data={data}
+          data={chartData}
           margin={{
             top: 20,
             right: 20,

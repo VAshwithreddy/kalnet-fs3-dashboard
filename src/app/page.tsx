@@ -19,45 +19,45 @@ export default function Home() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-8 text-white relative">
-      <div className="absolute top-0 left-0 w-full h-96 bg-brand/10 blur-[100px] -z-10 rounded-full transform -translate-y-1/2"></div>
-      
-      <div className="glass-panel max-w-md w-full p-8 rounded-3xl text-center">
+    <div className="flex min-h-screen items-center justify-center p-8 bg-bg-app text-text-body relative">
+      <div className="bg-bg-card shadow-shadow-elevated max-w-md w-full p-8 rounded-3xl text-center border border-border">
         <div className="flex justify-center mb-6">
-          <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center">
-            <CopySlash className="text-brand w-10 h-10 font-bold" />
+          <div className="w-16 h-16 rounded-2xl bg-primary-ghost flex items-center justify-center">
+            <CopySlash className="text-primary w-10 h-10 font-bold" />
           </div>
         </div>
-        <h1 className="text-3xl font-bold tracking-tight mb-2">Welcome to OmniNode</h1>
-        <p className="text-gray-400 text-sm mb-10">Select a role to log in and test access controls.</p>
+        <h1 className="text-3xl font-bold tracking-tight mb-2 text-text-heading">
+          OMNI<span className="text-primary font-light">NODE</span>
+        </h1>
+        <p className="text-text-secondary text-sm mb-10">Select a role to log in and test access controls.</p>
 
         <div className="space-y-4">
           <button 
             onClick={() => handleLogin("ADMIN")}
-            className="w-full flex items-center justify-between p-4 rounded-xl border border-white/10 hover:border-brand hover:bg-white/5 transition-all text-left group"
+            className="w-full flex items-center justify-between p-4 rounded-xl border border-primary/30 hover:border-primary hover:bg-bg-card-hover transition-all duration-300 text-left group shadow-[0_0_15px_rgba(91,77,153,0.3)] hover:shadow-[0_0_25px_rgba(91,77,153,0.5)]"
           >
             <div className="flex items-center">
-              <div className="p-2 bg-brand/20 text-brand rounded-lg mr-4 group-hover:bg-brand group-hover:text-white transition-colors">
+              <div className="p-3 bg-primary-ghost text-primary rounded-xl mr-4 group-hover:bg-primary group-hover:text-text-on-primary transition-colors">
                 <Shield className="w-5 h-5" />
               </div>
               <div>
-                <div className="font-semibold text-white">Log in as Admin</div>
-                <div className="text-xs text-gray-400 mt-1">Full access to users, reports, and settings.</div>
+                <div className="font-semibold text-text-heading">Log in as Admin</div>
+                <div className="text-xs text-text-secondary mt-1">Full access to users, reports, and settings.</div>
               </div>
             </div>
           </button>
 
           <button 
             onClick={() => handleLogin("TEACHER")}
-            className="w-full flex items-center justify-between p-4 rounded-xl border border-white/10 hover:border-accent hover:bg-white/5 transition-all text-left group"
+            className="w-full flex items-center justify-between p-4 rounded-xl border border-border hover:border-primary hover:bg-bg-card-hover transition-all text-left group shadow-sm hover:shadow-md"
           >
             <div className="flex items-center">
-              <div className="p-2 bg-accent/20 text-accent rounded-lg mr-4 group-hover:bg-accent group-hover:text-white transition-colors">
+              <div className="p-3 bg-primary-pale text-primary-mid rounded-xl mr-4 group-hover:bg-primary group-hover:text-text-on-primary transition-colors">
                 <User className="w-5 h-5" />
               </div>
               <div>
-                <div className="font-semibold text-white">Log in as Teacher</div>
-                <div className="text-xs text-gray-400 mt-1">Restricted access view. Will trigger 403 blocks.</div>
+                <div className="font-semibold text-text-heading">Log in as Teacher</div>
+                <div className="text-xs text-text-secondary mt-1">Restricted access view. Will trigger 403 blocks.</div>
               </div>
             </div>
           </button>
