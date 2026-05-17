@@ -3,19 +3,23 @@ import { updateUserSchema } from "@/lib/validators";
 import { badRequest, serverError } from "@/lib/errors";
 import { updateUser } from "@/services/user.service";
 
+type RouteContext = {
+  params: {
+    id: string;
+  };
+};
+
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
-): Promise<NextResponse> {
+  context: RouteContext
+) {
   try {
-    // ✅ Validate ID
-    const id = Number(params.id);
+    const id = Number(context.params.id);
 
     if (!id || isNaN(id)) {
       return badRequest("Invalid user id");
     }
 
-    // ✅ Parse request body
     const body = await req.json();
     const parsed = updateUserSchema.safeParse(body);
 
@@ -23,7 +27,6 @@ export async function PATCH(
       return badRequest("Invalid body", parsed.error.flatten());
     }
 
-    // ✅ Update user
     const updatedUser = await updateUser(id, parsed.data);
 
     return NextResponse.json(updatedUser);
