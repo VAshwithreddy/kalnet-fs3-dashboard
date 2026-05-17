@@ -1,31 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
-import { patchUserSchema } from "@/lib/validators";
+import { updateUserSchema } from "@/lib/validators";
 import { badRequest, serverError } from "@/lib/errors";
-import { patchUser } from "@/services/users.service";
+import { updateUser } from "@/services/user.service";
 
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
-
-export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
-    const { id } = await ctx.params;
-    const userId = Number(id);
-    if (!Number.isInteger(userId) || userId <= 0) return badRequest("Invalid user id");
+    const id = Number(params.id);
+    if (!id) return badRequest("Invalid user id");
 
-    const body = await req.json().catch(() => null);
-    const parsed = patchUserSchema.safeParse(body);
-    if (!parsed.success) return badRequest("Invalid request body", parsed.error.flatten());
+    const body = await req.json();
+    const parsed = updateUserSchema.safeParse(body);
 
-    const updated = await patchUser(userId, parsed.data);
-    return NextResponse.json(updated);
-  } catch (e: unknown) {
-    if (e instanceof PrismaClientKnownRequestError && e.code === "P2025") {
-      return badRequest("User not found");
-    }
-    if (e instanceof PrismaClientKnownRequestError && e.code === "P2002") {
-      return badRequest("Email already exists");
-    }
+    if (!parsed.success)
+      return badRequest("Invalid body", parsed.error.flatten());
+
+    const user = await updateUser(id, parsed.data);
+
+    return NextResponse.json(user);
+
+  } catch (e) {
     return serverError("Failed to update user", String(e));
   }
 }

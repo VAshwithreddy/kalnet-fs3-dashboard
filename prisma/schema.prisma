@@ -67,10 +67,10 @@ model Student {
   status      StudentStatus @default(ACTIVE)
   createdAt   DateTime      @default(now())
 
-  admissions  Admission[]
-  invoices    FeeInvoice[]
-  payments    FeePayment[]
-  leaves      LeaveRequest[]
+  admissions Admission[]
+  invoices   FeeInvoice[]
+  payments   FeePayment[]
+  leaves     LeaveRequest[]
 
   @@index([status])
   @@map("students")
@@ -82,7 +82,7 @@ model Admission {
   admittedAt DateTime @default(now())
   admitYm    String   @db.VarChar(7) // YYYY-MM
 
-  student    Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@index([admittedAt])
   @@index([admitYm])
@@ -91,10 +91,10 @@ model Admission {
 }
 
 model ApprovalRequest {
-  id        Int            @id @default(autoincrement())
-  type      String         @db.VarChar(50)
-  status    ApprovalStatus @default(PENDING)
-  createdAt DateTime       @default(now())
+  id         Int            @id @default(autoincrement())
+  type       String         @db.VarChar(50)
+  status     ApprovalStatus @default(PENDING)
+  createdAt  DateTime       @default(now())
   resolvedAt DateTime?
 
   @@index([status])
@@ -112,7 +112,7 @@ model LeaveRequest {
   status    LeaveStatus @default(PENDING)
   createdAt DateTime    @default(now())
 
-  student   Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@index([status])
   @@index([createdAt])
@@ -128,8 +128,8 @@ model FeeInvoice {
   totalAmount Decimal       @db.Decimal(10, 2)
   status      InvoiceStatus @default(ISSUED)
 
-  student     Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  payments    FeePayment[]
+  student  Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  payments FeePayment[]
 
   @@index([studentId])
   @@index([issueDate])
@@ -148,8 +148,8 @@ model FeePayment {
   reference String?       @db.VarChar(100)
   paidYm    String        @db.VarChar(7) // YYYY-MM
 
-  invoice   FeeInvoice    @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
-  student   Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  invoice FeeInvoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  student Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@index([paidAt])
   @@index([paidYm])

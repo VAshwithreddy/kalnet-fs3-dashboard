@@ -14,11 +14,26 @@ export async function GET(req: NextRequest) {
       months: url.searchParams.get("months") ?? undefined,
     });
 
-    if (!parsed.success) return badRequest("Invalid query params", parsed.error.flatten());
+    if (!parsed.success) {
+      return badRequest(
+        "Invalid query params",
+        parsed.error.flatten()
+      );
+    }
 
-    const data = await getDashboardCharts(parsed.data.months);
+    const data = await getDashboardCharts(
+      parsed.data.months
+    );
+
     return NextResponse.json(data);
-  } catch (e) {
-    return serverError("Failed to load dashboard charts", String(e));
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      return serverError(
+        "Failed to load dashboard charts",
+        error.message
+      );
+    }
+
+    return serverError("Failed to load dashboard charts");
   }
 }

@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { reportsQuerySchema } from "@/lib/validators";
 import { badRequest, serverError } from "@/lib/errors";
-import { parseISODate } from "@/lib/date";
-import { getReport } from "@/services/reports.service";
+import { getReports } from "@/services/report.service";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -12,32 +11,23 @@ export async function GET(req: NextRequest) {
     const url = new URL(req.url);
 
     const parsed = reportsQuerySchema.safeParse({
-      querytype: url.searchParams.get("querytype"),
-      from: url.searchParams.get("from"),
-      to: url.searchParams.get("to"),
+      type: url.searchParams.get("type"),
+      startDate: url.searchParams.get("startDate") ?? undefined,
+      endDate: url.searchParams.get("endDate") ?? undefined,
     });
 
-    if (!parsed.success) return badRequest("Invalid query params", parsed.error.flatten());
+    if (!parsed.success)
+      return badRequest("Invalid query params", parsed.error.flatten());
 
-    let from: Date, to: Date;
-    try {
-      from = parseISODate(parsed.data.from);
-      to = parseISODate(parsed.data.to);
-    } catch {
-      return badRequest("Invalid from/to date. Use ISO like 2026-04-01");
-    }
+    const data = await getReports(
+      parsed.data.type,
+      parsed.data.startDate,
+      parsed.data.endDate
+    );
 
-    if (from >= to) return badRequest("`from` must be less than `to`");
+    return NextResponse.json(data);
 
-    const rows = await getReport(parsed.data.querytype, from, to);
-    return NextResponse.json({
-      querytype: parsed.data.querytype,
-      from,
-      to,
-      count: rows.length,
-      rows,
-    });
   } catch (e) {
-    return serverError("Failed to generate report", String(e));
+    return serverError("Failed to load reports", String(e));
   }
 }

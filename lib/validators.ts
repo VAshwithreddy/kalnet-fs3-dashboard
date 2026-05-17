@@ -1,29 +1,30 @@
 import { z } from "zod";
 
+/* Dashboard Charts */
 export const dashboardChartsQuerySchema = z.object({
-  months: z.coerce.number().int().min(1).max(24).default(6),
+  months: z
+    .string()
+    .regex(/^\d+$/)
+    .transform(Number)
+    .optional(),
 });
 
+/* Reports */
 export const reportsQuerySchema = z.object({
-  querytype: z.enum(["fees", "admissions", "approvals", "leave"]),
-  from: z.string().min(1),
-  to: z.string().min(1),
+  type: z.enum(["admissions", "payments"]),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
 });
 
+/* Users */
 export const createUserSchema = z.object({
+  name: z.string().min(1),
   email: z.string().email(),
-  name: z.string().min(2).max(120),
-  role: z.enum(["ADMIN", "STAFF"]).default("STAFF"),
-  status: z.enum(["ACTIVE", "INACTIVE"]).default("ACTIVE"),
+  role: z.enum(["ADMIN", "STAFF"]).optional(),
 });
 
-export const patchUserSchema = z
-  .object({
-    email: z.string().email().optional(),
-    name: z.string().min(2).max(120).optional(),
-    role: z.enum(["ADMIN", "STAFF"]).optional(),
-    status: z.enum(["ACTIVE", "INACTIVE"]).optional(),
-  })
-  .refine((obj: Record<string, unknown>) => Object.keys(obj).length > 0, {
-    message: "At least one field is required",
-  });
+export const updateUserSchema = z.object({
+  name: z.string().optional(),
+  role: z.enum(["ADMIN", "STAFF"]).optional(),
+  status: z.enum(["ACTIVE", "INACTIVE"]).optional(),
+});
