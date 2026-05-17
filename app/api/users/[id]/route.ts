@@ -5,8 +5,10 @@ import { updateUser } from "@/services/user.service";
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
+  const { params } = context;
+
   try {
     const id = Number(params.id);
 
@@ -24,10 +26,12 @@ export async function PATCH(
     const updatedUser = await updateUser(id, parsed.data);
 
     return NextResponse.json(updatedUser);
+
   } catch (error: unknown) {
     if (error instanceof Error) {
       return serverError("Failed to update user", error.message);
     }
+
     return serverError("Failed to update user");
   }
 }
