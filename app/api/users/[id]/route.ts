@@ -3,15 +3,9 @@ import { updateUserSchema } from "@/lib/validators";
 import { badRequest, serverError } from "@/lib/errors";
 import { updateUser } from "@/services/user.service";
 
-type RouteContext = {
-  params: {
-    id: string;
-  };
-};
-
 export async function PATCH(
   req: NextRequest,
-  context: RouteContext
+  context: { params: { id: string } }
 ) {
   try {
     const id = Number(context.params.id);
@@ -30,12 +24,10 @@ export async function PATCH(
     const updatedUser = await updateUser(id, parsed.data);
 
     return NextResponse.json(updatedUser);
-
   } catch (error: unknown) {
     if (error instanceof Error) {
       return serverError("Failed to update user", error.message);
     }
-
     return serverError("Failed to update user");
   }
 }
