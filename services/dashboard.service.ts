@@ -1,6 +1,6 @@
 // services/dashboard.service.ts
 
-import { prisma } from "@/lib/prisma";
+import { prisma } from "../lib/prisma";
 
 /* ============================================================
    Helper: Get Last N Months (YYYY-MM)

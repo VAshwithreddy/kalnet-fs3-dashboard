@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getDashboardStats } from "@/services/dashboard.service";
-import { serverError } from "@/lib/errors";
+import { prisma } from "../../../../lib/prisma";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

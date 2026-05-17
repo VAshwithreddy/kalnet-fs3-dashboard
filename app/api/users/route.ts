@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createUserSchema } from "@/lib/validators";
 import { badRequest, serverError } from "@/lib/errors";
-import { createUser } from "@/services/user.service";
+import { createUser } from "../../../services/user.service";
 
 export async function POST(req: NextRequest) {
   try {
