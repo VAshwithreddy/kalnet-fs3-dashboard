@@ -5,15 +5,17 @@ import { updateUser } from "@/services/user.service";
 
 export async function PATCH(
   req: NextRequest,
-  context: { params: { id: string } }
-) {
+  { params }: { params: { id: string } }
+): Promise<NextResponse> {
   try {
-    const id = Number(context.params.id);
+    // ✅ Validate ID
+    const id = Number(params.id);
 
-    if (!id) {
+    if (!id || isNaN(id)) {
       return badRequest("Invalid user id");
     }
 
+    // ✅ Parse request body
     const body = await req.json();
     const parsed = updateUserSchema.safeParse(body);
 
@@ -21,13 +23,16 @@ export async function PATCH(
       return badRequest("Invalid body", parsed.error.flatten());
     }
 
-    const user = await updateUser(id, parsed.data);
+    // ✅ Update user
+    const updatedUser = await updateUser(id, parsed.data);
 
-    return NextResponse.json(user);
+    return NextResponse.json(updatedUser);
+
   } catch (error: unknown) {
     if (error instanceof Error) {
       return serverError("Failed to update user", error.message);
     }
+
     return serverError("Failed to update user");
   }
 }
