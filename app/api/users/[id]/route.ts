@@ -1,14 +1,14 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { updateUserSchema } from "@/lib/validators";
 import { badRequest, serverError } from "@/lib/errors";
 import { updateUser } from "@/services/user.service";
 
 export async function PATCH(
-  req: NextRequest,
-  context: { params: { id: string } }
+  req: Request,
+  { params }: { params: { id: string } }
 ) {
   try {
-    const id = Number(context.params.id);
+    const id = Number(params.id);
 
     if (!id || isNaN(id)) {
       return badRequest("Invalid user id");
