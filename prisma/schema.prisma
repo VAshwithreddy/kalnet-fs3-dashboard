@@ -158,3 +158,17 @@ model FeePayment {
   @@index([studentId])
   @@map("fee_payments")
 }
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  action    String   @db.VarChar(100)
+  entity    String   @db.VarChar(100)
+  entityId  Int
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  @@index([entity])
+  @@index([entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
