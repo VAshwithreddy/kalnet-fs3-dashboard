@@ -38,3 +38,5 @@ jobs:
 
       - name: Build
         run: npm run build
+        env:
+           DATABASE_URL: "mysql://root:Bhanu8341@@127.0.0.1:3306/test"
