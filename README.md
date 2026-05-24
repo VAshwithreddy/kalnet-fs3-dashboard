@@ -1,6 +1,6 @@
 # 🏫 Kalnet FS3 — School Management Admin Dashboard
 
-A high-end, dark-themed **School Management Administrative Dashboard** built with **Next.js 16**, **Tailwind CSS v4**, and **Recharts**. It provides role-based access control (RBAC), rich analytics, interactive reports, and a polished glassmorphism UI.
+A high-end, dark-themed **School Management Administrative Dashboard** built with **Next.js**, **Tailwind CSS v4**, and **Recharts**. It provides role-based access control (RBAC), rich analytics, interactive reports, and a polished glassmorphism UI.
 
 ---
 
@@ -56,6 +56,7 @@ A high-end, dark-themed **School Management Administrative Dashboard** built wit
 | **Framer Motion** | ^12 | Animations & micro-interactions |
 | **Lucide React** | ^1.8 | Icon library |
 | **TypeScript** | ^5 | Type safety |
+| **Prisma** | ^6.19.3 | ORM and database connection |
 
 ---
 
@@ -72,41 +73,13 @@ The UI uses a **dark-mode glassmorphism** design system defined in `globals.css`
 | `--color-danger` | Error / forbidden color (`#EF4444`) |
 | `--color-success` | Positive metric color (`#22C55E`) |
 
-Custom Tailwind utilities include:
-- `.glass-panel` — frosted-glass card style with backdrop blur
-- `.stat-card` — metric card with hover lift animation
-- `.btn-primary` / `.btn-ghost` — consistent button styles
-
 ---
 
-## 📁 Project Structure
-
-```
-src/
-├── app/
-│   ├── page.tsx                  # Login / Role selection screen
-│   ├── layout.tsx                # Root layout with AuthProvider
-│   ├── globals.css               # Design tokens & global styles
-│   └── admin/
-│       ├── layout.tsx            # Admin shell: sidebar + header + RBAC guard
-│       ├── dashboard/page.tsx    # Overview metrics & charts
-│       ├── users/page.tsx        # User management table
-│       └── reports/page.tsx      # Reports table with CSV export
-├── components/
-│   ├── MetricCard.tsx            # Reusable KPI stat card
-│   ├── TrendChart.tsx            # Admissions + Fees mixed chart
-│   └── ActivityChart.tsx        # Weekly activity area chart
-└── context/
-    └── AuthContext.tsx           # Global auth state (role management)
-```
-
----
-
-## ⚙️ Getting Started
+## ⚙️ Local Setup
 
 ### Prerequisites
 - **Node.js** v18 or later
-- **npm** v9 or later
+- **pnpm** package manager
 
 ### Installation
 
@@ -116,20 +89,18 @@ git clone https://github.com/VAshwithreddy/kalnet-fs3-dashboard.git
 cd kalnet-fs3-dashboard
 
 # Install dependencies
-npm install
+pnpm install
+
+# Setup database (SQLite)
+pnpm prisma generate
+pnpm prisma db push
+pnpm tsx prisma/seed.ts # to populate test data
 
 # Start development server
-npm run dev
+pnpm dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-### Build for Production
-
-```bash
-npm run build
-npm start
-```
 
 ---
 
@@ -142,33 +113,3 @@ npm start
 5. Click **Log out** in the sidebar footer to return to the login screen
 6. Try **"Log in as Teacher"** — you will be blocked by the 403 Access Forbidden screen
 
----
-
-## 📝 Changes Made
-
-### UI Overhaul
-- Migrated global CSS to **Tailwind CSS v4** syntax with CSS custom properties
-- Implemented a cohesive **dark-mode color palette** with glassmorphism effects
-- Added `backdrop-blur`, gradient glows, and smooth hover transitions throughout
-
-### School Management Domain
-- Replaced generic metrics with **6 school-specific KPI cards** (Students, Teachers, Events, Fees, Admissions, Attendance)
-- Added **combined Bar + Line trend chart** for Admissions vs. Fee Collections per month
-
-### RBAC System
-- Built `AuthContext` to manage role state globally across the app
-- Admin layout enforces role checks and renders a **403 screen** for non-admins
-- Login page allows quick role simulation without a backend
-
-### Reports Feature
-- Built an interactive **filterable reports table** with category tabs
-- Implemented **CSV export** that respects the active filter selection
-
-### User Management
-- Created a **user listing table** with role badges, status indicators, and action buttons
-
----
-
-## 📜 License
-
-MIT — feel free to use, modify, and distribute.

@@ -1,0 +1,13 @@
+:root {
+  --page-bg: #edf4fb;
+  --panel-border: rgba(148, 163, 184, 0.24);
+  --panel-strong: linear-gradient(180deg, #0f172a 0%, #172554 100%);
+  --ink-strong: #0f172a;
+  --ink-muted: #475569;
+  --accent-soft: #ccfbf1;
+  --accent-strong: #0f766e;
+  --success-soft: #dcfce7;
+  --success-strong: #166534;
+  --warning-soft: #fef3c7;
+  --warning-strong: #92400e;
+}

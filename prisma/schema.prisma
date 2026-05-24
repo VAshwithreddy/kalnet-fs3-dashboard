@@ -3,56 +3,18 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
-enum Role {
-  ADMIN
-  STAFF
-}
-
-enum UserStatus {
-  ACTIVE
-  INACTIVE
-}
-
-enum StudentStatus {
-  ACTIVE
-  INACTIVE
-}
-
-enum ApprovalStatus {
-  PENDING
-  APPROVED
-  REJECTED
-}
-
-enum LeaveStatus {
-  PENDING
-  APPROVED
-  REJECTED
-}
-
-enum InvoiceStatus {
-  ISSUED
-  VOID
-}
-
-enum PaymentStatus {
-  SUCCESS
-  FAILED
-  REFUNDED
-}
-
 model User {
-  id        Int        @id @default(autoincrement())
-  email     String     @unique @db.VarChar(191)
-  name      String     @db.VarChar(120)
-  role      Role       @default(STAFF)
-  status    UserStatus @default(ACTIVE)
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String
+  role      String   @default("STAFF")
+  status    String   @default("ACTIVE")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([role])
   @@index([status])
@@ -60,12 +22,12 @@ model User {
 }
 
 model Student {
-  id          Int           @id @default(autoincrement())
-  admissionNo String?       @unique @db.VarChar(50)
-  firstName   String        @db.VarChar(100)
-  lastName    String        @db.VarChar(100)
-  status      StudentStatus @default(ACTIVE)
-  createdAt   DateTime      @default(now())
+  id          Int      @id @default(autoincrement())
+  admissionNo String?  @unique
+  firstName   String
+  lastName    String
+  status      String   @default("ACTIVE")
+  createdAt   DateTime @default(now())
 
   admissions  Admission[]
   invoices    FeeInvoice[]
@@ -80,7 +42,7 @@ model Admission {
   id         Int      @id @default(autoincrement())
   studentId  Int
   admittedAt DateTime @default(now())
-  admitYm    String   @db.VarChar(7) // YYYY-MM
+  admitYm    String
 
   student    Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
@@ -91,10 +53,10 @@ model Admission {
 }
 
 model ApprovalRequest {
-  id        Int            @id @default(autoincrement())
-  type      String         @db.VarChar(50)
-  status    ApprovalStatus @default(PENDING)
-  createdAt DateTime       @default(now())
+  id         Int       @id @default(autoincrement())
+  type       String
+  status     String    @default("PENDING")
+  createdAt  DateTime  @default(now())
   resolvedAt DateTime?
 
   @@index([status])
@@ -104,15 +66,15 @@ model ApprovalRequest {
 }
 
 model LeaveRequest {
-  id        Int         @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   studentId Int
   fromDate  DateTime
   toDate    DateTime
-  reason    String?     @db.VarChar(255)
-  status    LeaveStatus @default(PENDING)
-  createdAt DateTime    @default(now())
+  reason    String?
+  status    String   @default("PENDING")
+  createdAt DateTime @default(now())
 
-  student   Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@index([status])
   @@index([createdAt])
@@ -121,12 +83,12 @@ model LeaveRequest {
 }
 
 model FeeInvoice {
-  id          Int           @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   studentId   Int
-  issueDate   DateTime      @default(now())
+  issueDate   DateTime @default(now())
   dueDate     DateTime?
-  totalAmount Decimal       @db.Decimal(10, 2)
-  status      InvoiceStatus @default(ISSUED)
+  totalAmount Float
+  status      String   @default("ISSUED")
 
   student     Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
   payments    FeePayment[]
@@ -138,18 +100,18 @@ model FeeInvoice {
 }
 
 model FeePayment {
-  id        Int           @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   invoiceId Int
   studentId Int
-  paidAt    DateTime      @default(now())
-  amount    Decimal       @db.Decimal(10, 2)
-  status    PaymentStatus @default(SUCCESS)
-  method    String?       @db.VarChar(30)
-  reference String?       @db.VarChar(100)
-  paidYm    String        @db.VarChar(7) // YYYY-MM
+  paidAt    DateTime @default(now())
+  amount    Float
+  status    String   @default("SUCCESS")
+  method    String?
+  reference String?
+  paidYm    String
 
-  invoice   FeeInvoice    @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
-  student   Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  invoice   FeeInvoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  student   Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@index([paidAt])
   @@index([paidYm])
@@ -157,4 +119,18 @@ model FeePayment {
   @@index([invoiceId])
   @@index([studentId])
   @@map("fee_payments")
+}
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  action    String
+  entity    String
+  entityId  Int
+  meta      String?
+  createdAt DateTime @default(now())
+
+  @@index([entity])
+  @@index([entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
 }
