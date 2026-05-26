@@ -1,31 +1,33 @@
-import { NextRequest, NextResponse } from "next/server";
-import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
-import { patchUserSchema } from "@/lib/validators";
+import { NextResponse } from "next/server";
+import { updateUserSchema } from "@/lib/validators";
 import { badRequest, serverError } from "@/lib/errors";
-import { patchUser } from "@/services/users.service";
+import { updateUser } from "@/services/user.service";
 
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
-export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
+export async function PATCH(req: Request, context: any) {
   try {
-    const { id } = await ctx.params;
-    const userId = Number(id);
-    if (!Number.isInteger(userId) || userId <= 0) return badRequest("Invalid user id");
+    const id = Number(context.params.id);
 
-    const body = await req.json().catch(() => null);
-    const parsed = patchUserSchema.safeParse(body);
-    if (!parsed.success) return badRequest("Invalid request body", parsed.error.flatten());
+    if (!id || isNaN(id)) {
+      return badRequest("Invalid user id");
+    }
 
-    const updated = await patchUser(userId, parsed.data);
-    return NextResponse.json(updated);
-  } catch (e: unknown) {
-    if (e instanceof PrismaClientKnownRequestError && e.code === "P2025") {
-      return badRequest("User not found");
+    const body = await req.json();
+    const parsed = updateUserSchema.safeParse(body);
+
+    if (!parsed.success) {
+      return badRequest("Invalid body", parsed.error.flatten());
     }
-    if (e instanceof PrismaClientKnownRequestError && e.code === "P2002") {
-      return badRequest("Email already exists");
+
+    const updatedUser = await updateUser(id, parsed.data);
+
+    return NextResponse.json(updatedUser);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      return serverError("Failed to update user", error.message);
     }
-    return serverError("Failed to update user", String(e));
+
+    return serverError("Failed to update user");
   }
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { UserPlus, MoreVertical, Edit2, ShieldAlert } from "lucide-react";
+import { UserPlus, Edit2, ShieldAlert } from "lucide-react";
 
 type Role = "ADMIN" | "TEACHER" | "STUDENT" | "STAFF";
 
@@ -14,13 +14,7 @@ type User = {
   lastLogin: string;
 };
 
-const initialUsers: User[] = [
-  { id: "USR-001", name: "Alice Johnson", email: "alice.j@school.edu", role: "ADMIN", isActive: true, lastLogin: "2 mins ago" },
-  { id: "USR-002", name: "Robert Smith", email: "robert.s@school.edu", role: "TEACHER", isActive: true, lastLogin: "4 hours ago" },
-  { id: "USR-003", name: "Mary Williams", email: "mary.w@school.edu", role: "STAFF", isActive: false, lastLogin: "2 days ago" },
-  { id: "USR-004", name: "James Brown", email: "james.b@student.edu", role: "STUDENT", isActive: true, lastLogin: "1 day ago" },
-  { id: "USR-005", name: "Patricia Taylor", email: "patricia.t@school.edu", role: "TEACHER", isActive: true, lastLogin: "10 mins ago" },
-];
+
 
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
@@ -32,7 +26,7 @@ export default function UsersPage() {
         if (res.ok) {
           const data = await res.json();
           // Map DB schema to UI state
-          setUsers(data.users.map((u: any) => ({
+          setUsers(data.users.map((u: { id: number | string; name: string; email: string; role: Role; status: string }) => ({
             id: String(u.id),
             name: u.name,
             email: u.email,

@@ -1,9 +1,0 @@
-import { NextResponse } from "next/server";
-
-export function badRequest(message: string, details?: unknown) {
-  return NextResponse.json({ error: message, details }, { status: 400 });
-}
-
-export function serverError(message = "Internal Server Error", details?: unknown) {
-  return NextResponse.json({ error: message, details }, { status: 500 });
-}

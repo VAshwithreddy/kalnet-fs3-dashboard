@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    "node_modules_backup_1157402492/**",
+    "node_modules_backup_1850994782/**",
+    "yarn.js",
+    "prisma/**",
   ]),
 ]);
 

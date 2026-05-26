@@ -55,8 +55,8 @@ export default function SettingsPage() {
       if (!res.ok) throw new Error(data.error || "Failed to save profile");
       
       showNotification("success", "Profile information updated successfully.");
-    } catch (e: any) {
-      showNotification("error", e.message);
+    } catch (e: unknown) {
+      showNotification("error", e instanceof Error ? e.message : "An error occurred");
     } finally {
       setIsSaving(false);
     }
@@ -91,8 +91,8 @@ export default function SettingsPage() {
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-    } catch (e: any) {
-      showNotification("error", e.message);
+    } catch (e: unknown) {
+      showNotification("error", e instanceof Error ? e.message : "An error occurred");
     } finally {
       setIsSaving(false);
     }
@@ -184,6 +184,7 @@ export default function SettingsPage() {
                 <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-primary to-primary-light p-1 flex-shrink-0">
                   <div className="w-full h-full bg-bg-app rounded-full flex items-center justify-center text-text-heading border-2 border-bg-card overflow-hidden">
                     {avatarUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
                       <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
                     ) : (
                       <span className="text-xl font-bold">AD</span>

@@ -18,7 +18,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const saved = localStorage.getItem("omninode_role") as Role;
-    if (saved) setRole(saved);
+    if (saved) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setRole(saved);
+    }
     setMounted(true);
   }, []);
 

@@ -13,7 +13,7 @@ export async function logAudit(
         action,
         entity,
         entityId,
-        meta,
+        meta: meta ? JSON.stringify(meta) : null,
       },
     });
   } catch (error) {

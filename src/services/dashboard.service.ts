@@ -1,104 +1,157 @@
-import { prisma } from "@/lib/prisma";
-import { Prisma } from "@prisma/client";
-import { startOfMonth, startOfNextMonth } from "@/lib/date";
+// services/dashboard.service.ts
 
+import { prisma } from "../lib/prisma";
+
+/* ============================================================
+   Helper: Get Last N Months (YYYY-MM)
+============================================================ */
+function getLastMonths(count: number) {
+  const months: string[] = [];
+  const now = new Date();
+
+  for (let i = count - 1; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    months.push(`${yyyy}-${mm}`);
+  }
+
+  return months;
+}
+
+/* ============================================================
+   ✅ Dashboard STATS (6 Metrics)
+   Uses Promise.all for parallel execution
+============================================================ */
 export async function getDashboardStats() {
-  const monthStart = startOfMonth();
-  const nextMonthStart = startOfNextMonth();
+  const startOfMonth = new Date(
+    new Date().getFullYear(),
+    new Date().getMonth(),
+    1
+  );
 
   const [
     studentsEnrolled,
     approvalsPending,
-    outstandingRows,
+    outstandingFees,
     newAdmissionsThisMonth,
-    feesCollectedAgg,
-    leavePending,
+    totalStaff,
+    feesCollectedThisMonth,
     latestApprovals,
     latestAdmissions,
+    leavePending,
   ] = await Promise.all([
-    prisma.student.count({ where: { status: "ACTIVE" } }),
+    // 1️⃣ Total Students
+    prisma.student.count(),
 
-    prisma.approvalRequest.count({ where: { status: "PENDING" } }),
+    // 2️⃣ Pending Approvals
+    prisma.approvalRequest.count({
+      where: { status: "PENDING" },
+    }),
 
-    prisma.$queryRaw<{ outstanding_fees: string }[]>`
-      SELECT IFNULL(SUM(t.outstanding), 0) AS outstanding_fees
-      FROM (
-        SELECT
-          fi.id,
-          (fi.totalAmount - IFNULL(SUM(fp.amount), 0)) AS outstanding
-        FROM fee_invoices fi
-        LEFT JOIN fee_payments fp
-          ON fp.invoiceId = fi.id
-         AND fp.status = 'SUCCESS'
-        WHERE fi.status = 'ISSUED'
-        GROUP BY fi.id
-        HAVING outstanding > 0
-      ) t;
-    `,
+    // 3️⃣ Outstanding Fees (Sum of ISSUED invoices)
+    prisma.feeInvoice.aggregate({
+      _sum: { totalAmount: true },
+      where: { status: "ISSUED" },
+    }),
 
+    // 4️⃣ New Admissions This Month
     prisma.admission.count({
-      where: { admittedAt: { gte: monthStart, lt: nextMonthStart } },
+      where: { admittedAt: { gte: startOfMonth } },
     }),
 
+    // 5️⃣ Total Staff
+    prisma.user.count({
+      where: { role: "STAFF" },
+    }),
+
+    // 6️⃣ Fee Collected This Month
     prisma.feePayment.aggregate({
-      where: { status: "SUCCESS", paidAt: { gte: monthStart, lt: nextMonthStart } },
       _sum: { amount: true },
+      where: {
+        status: "SUCCESS",
+        paidAt: { gte: startOfMonth },
+      },
     }),
 
-    prisma.leaveRequest.count({ where: { status: "PENDING" } }),
-
+    // 7️⃣ Latest Approvals
     prisma.approvalRequest.findMany({
-      orderBy: { createdAt: "desc" },
       take: 5,
+      orderBy: { createdAt: "desc" },
     }),
 
+    // 8️⃣ Latest Admissions
     prisma.admission.findMany({
-      include: { student: true },
-      orderBy: { admittedAt: "desc" },
       take: 5,
+      orderBy: { admittedAt: "desc" },
+      include: { student: true },
+    }),
+
+    // 9️⃣ Leave Requests Pending
+    prisma.leaveRequest.count({
+      where: { status: "PENDING" },
     }),
   ]);
 
   return {
     studentsEnrolled,
     approvalsPending,
-    outstandingFees: Number(outstandingRows?.[0]?.outstanding_fees ?? 0),
+    outstandingFees: Number(
+      outstandingFees._sum.totalAmount || 0
+    ),
     newAdmissionsThisMonth,
-    feesCollectedThisMonth: Number(feesCollectedAgg._sum.amount ?? 0),
+    totalStaff,
+    feesCollectedThisMonth: Number(
+      feesCollectedThisMonth._sum.amount || 0
+    ),
     leavePending,
     latestApprovals,
     latestAdmissions,
   };
 }
 
-export async function getDashboardCharts(months: number) {
-  const now = new Date();
-  const from = new Date(now.getFullYear(), now.getMonth() - (months - 1), 1);
-  const to = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+/* ============================================================
+   ✅ Dashboard CHARTS (Last 6 Months)
+   Uses groupBy on indexed fields admitYm & paidYm
+============================================================ */
+export async function getDashboardCharts(monthsCount?: number) {
+  const months = getLastMonths(monthsCount ?? 6);
 
-  const feeCollections = await prisma.feePayment.groupBy({
-    by: ["paidYm"] as Prisma.FeePaymentScalarFieldEnum[],
-    where: { status: "SUCCESS", paidAt: { gte: from, lt: to } },
-    _sum: { amount: true },
-    orderBy: [{ paidYm: "asc" }], // IMPORTANT: no "as const"
-  });
+  const [admissions, payments] = await Promise.all([
+    // Admissions grouped by month
+    prisma.admission.groupBy({
+      by: ["admitYm"],
+      where: { admitYm: { in: months } },
+      _count: { id: true },
+    }),
 
-  const admissions = await prisma.admission.groupBy({
-    by: ["admitYm"] as Prisma.AdmissionScalarFieldEnum[],
-    where: { admittedAt: { gte: from, lt: to } },
-    _count: { _all: true },
-    orderBy: [{ admitYm: "asc" }], // IMPORTANT: no "as const"
-  });
+    // Fee payments grouped by month
+    prisma.feePayment.groupBy({
+      by: ["paidYm"],
+      where: {
+        paidYm: { in: months },
+        status: "SUCCESS",
+      },
+      _sum: { amount: true },
+    }),
+  ]);
 
-  return {
-    range: { from, to, months },
-    feeCollectionMonthly: feeCollections.map((r) => ({
-      month: r.paidYm,
-      total: Number(r._sum.amount ?? 0),
-    })),
-    admissionsMonthly: admissions.map((r) => ({
-      month: r.admitYm,
-      count: r._count._all,
-    })),
-  };
+  // Convert arrays to maps
+  const admissionMap = Object.fromEntries(
+    admissions.map((a) => [a.admitYm, a._count.id])
+  );
+
+  const paymentMap = Object.fromEntries(
+    payments.map((p) => [
+      p.paidYm,
+      Number(p._sum.amount || 0),
+    ])
+  );
+
+  // Return structured result
+  return months.map((month) => ({
+    month,
+    admissions: admissionMap[month] || 0,
+    feeCollected: paymentMap[month] || 0,
+  }));
 }

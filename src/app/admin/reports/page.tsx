@@ -12,7 +12,7 @@ const initialReports = [
 ];
 
 export default function ReportsPage() {
-  const [data, setData] = useState(initialReports);
+  const [data] = useState(initialReports);
   const [filterType, setFilterType] = useState("All");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -28,11 +28,13 @@ export default function ReportsPage() {
     return match;
   });
 
-  const sortedData = [...filteredData].sort((a: any, b: any) => {
+  const sortedData = [...filteredData].sort((a, b) => {
     if (!sortConfig) return 0;
     const { key, direction } = sortConfig;
-    if (a[key] < b[key]) return direction === 'asc' ? -1 : 1;
-    if (a[key] > b[key]) return direction === 'asc' ? 1 : -1;
+    const valA = a[key as keyof typeof a];
+    const valB = b[key as keyof typeof b];
+    if (valA < valB) return direction === 'asc' ? -1 : 1;
+    if (valA > valB) return direction === 'asc' ? 1 : -1;
     return 0;
   });
 

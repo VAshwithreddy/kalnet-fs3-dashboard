@@ -12,8 +12,36 @@ import {
   ClipboardCheck 
 } from "lucide-react";
 
+interface Approval {
+  id: number;
+  type: string;
+  status: string;
+  createdAt: string;
+}
+
+interface Admission {
+  id: number;
+  admittedAt: string;
+  student: {
+    admissionNo: string | null;
+    firstName: string;
+    lastName: string;
+  };
+}
+
+interface DashboardStats {
+  studentsEnrolled: number;
+  approvalsPending: number;
+  outstandingFees: number;
+  newAdmissionsThisMonth: number;
+  feesCollectedThisMonth: number;
+  leavePending: number;
+  latestApprovals?: Approval[];
+  latestAdmissions?: Admission[];
+}
+
 export default function DashboardPage() {
-  const [stats, setStats] = useState<any>(null);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -122,7 +150,7 @@ export default function DashboardPage() {
                 </tr>
               </thead>
               <tbody className="text-sm">
-                {stats?.latestApprovals?.map((item: any) => (
+                {stats?.latestApprovals?.map((item) => (
                   <tr key={item.id} className="border-b border-border/50 last:border-0 hover:bg-bg-app">
                     <td className="py-3 text-text-heading">{item.type}</td>
                     <td className="py-3">
@@ -155,9 +183,9 @@ export default function DashboardPage() {
                 </tr>
               </thead>
               <tbody className="text-sm">
-                {stats?.latestAdmissions?.map((item: any) => (
+                {stats?.latestAdmissions?.map((item) => (
                   <tr key={item.id} className="border-b border-border/50 last:border-0 hover:bg-bg-app">
-                    <td className="py-3 text-text-heading">{item.admissionNo || '-'}</td>
+                    <td className="py-3 text-text-heading">{item.student?.admissionNo || '-'}</td>
                     <td className="py-3 text-text-heading">{item.student?.firstName} {item.student?.lastName}</td>
                     <td className="py-3 text-text-secondary">{new Date(item.admittedAt).toLocaleDateString()}</td>
                   </tr>

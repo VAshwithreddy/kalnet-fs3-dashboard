@@ -20,6 +20,13 @@ export async function createUser(
   return user;
 }
 
+export async function getUsers() {
+  const users = await prisma.user.findMany({
+    orderBy: { createdAt: 'desc' }
+  });
+  return users;
+}
+
 export async function updateUser(
   id: number,
   data: Prisma.UserUpdateInput
