@@ -14,7 +14,7 @@ export default function Home() {
     if (role === "ADMIN") {
       router.push("/admin/dashboard");
     } else {
-      router.push("/dashboard"); // Simulated non-admin route
+      router.push("/teacher/dashboard"); // Redirect to the new teacher dashboard
     }
   };
 
