@@ -1,0 +1,123 @@
+@import "tailwindcss";
+
+:root {
+  /* BACKGROUNDS */
+  --bg-outer:          #f8fafc;
+  --bg-app:            #f8fafc;
+  --bg-card:           rgba(255, 255, 255, 0.7);
+  --bg-sidebar:        rgba(255, 255, 255, 0.85);
+  --bg-card-hover:     rgba(255, 255, 255, 0.95);
+  --bg-table-row:      rgba(248, 250, 252, 0.5);
+  --bg-input:          rgba(255, 255, 255, 0.8);
+  --bg-tooltip:        #0f172a;
+
+  /* PRIMARY / BRAND */
+  --primary:           #2563eb;
+  --primary-mid:       #3b82f6;
+  --primary-light:     #60a5fa;
+  --primary-pale:      #bfdbfe;
+  --primary-ghost:     #eff6ff;
+
+  /* TEXT */
+  --text-heading:      #0f172a;
+  --text-body:         #334155;
+  --text-secondary:    #64748b;
+  --text-muted:        #94a3b8;
+  --text-on-primary:   #ffffff;
+  --text-link:         #2563eb;
+
+  /* STATUS & ACCENTS */
+  --green:             #16a34a;
+  --green-light:       #dcfce7;
+  --red:               #dc2626;
+  --pink:              #db2777;
+  --pink-light:        #fbcfe8;
+  --yellow:            #ca8a04;
+  --danger:            #ef4444;
+  --accent-teal:       #0d9488;
+
+  /* BORDERS & DIVIDERS */
+  --border:            rgba(226, 232, 240, 0.8);
+  --border-light:      rgba(241, 245, 249, 0.8);
+  --border-focus:      #3b82f6;
+
+  /* CHART */
+  --chart-line-1:      #2563eb;
+  --chart-fill-1:      rgba(37, 99, 235, 0.18);
+  --chart-line-2:      #0f172a;
+  --chart-grid:        #e2e8f0;
+  --chart-axis:        #94a3b8;
+
+  /* SIDEBAR ICONS */
+  --icon-active-bg:    #eff6ff;
+  --icon-active:       #2563eb;
+  --icon-inactive:     #64748b;
+  --icon-logout:       #ef4444;
+
+  /* SHADOWS */
+  --shadow-card:       0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  --shadow-elevated:   0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-btn:        0 4px 6px -1px rgba(37, 99, 235, 0.2), 0 2px 4px -1px rgba(37, 99, 235, 0.1);
+}
+
+@theme inline {
+  --color-bg-outer: var(--bg-outer);
+  --color-bg-app: var(--bg-app);
+  --color-bg-card: var(--bg-card);
+  --color-bg-sidebar: var(--bg-sidebar);
+  --color-bg-card-hover: var(--bg-card-hover);
+  --color-bg-table-row: var(--bg-table-row);
+  --color-bg-input: var(--bg-input);
+  --color-bg-tooltip: var(--bg-tooltip);
+
+  --color-primary: var(--primary);
+  --color-primary-mid: var(--primary-mid);
+  --color-primary-light: var(--primary-light);
+  --color-primary-pale: var(--primary-pale);
+  --color-primary-ghost: var(--primary-ghost);
+
+  --color-text-heading: var(--text-heading);
+  --color-text-body: var(--text-body);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-text-on-primary: var(--text-on-primary);
+  --color-text-link: var(--text-link);
+
+  --color-green: var(--green);
+  --color-green-light: var(--green-light);
+  --color-red: var(--red);
+  --color-pink: var(--pink);
+  --color-pink-light: var(--pink-light);
+  --color-yellow: var(--yellow);
+  --color-danger: var(--danger);
+
+  --color-border: var(--border);
+  --color-border-light: var(--border-light);
+  --color-border-focus: var(--border-focus);
+
+  --color-chart-line-1: var(--chart-line-1);
+  --color-chart-fill-1: var(--chart-fill-1);
+  --color-chart-line-2: var(--chart-line-2);
+  --color-chart-grid: var(--chart-grid);
+  --color-chart-axis: var(--chart-axis);
+
+  --color-icon-active-bg: var(--icon-active-bg);
+  --color-icon-active: var(--icon-active);
+  --color-icon-inactive: var(--icon-inactive);
+  --color-icon-logout: var(--icon-logout);
+
+  --shadow-card: var(--shadow-card);
+  --shadow-elevated: var(--shadow-elevated);
+  --shadow-btn: var(--shadow-btn);
+  
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+body {
+  background: radial-gradient(circle at top right, #ffffff, #f1f5f9);
+  background-attachment: fixed;
+  color: var(--color-text-body);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  min-height: 100vh;
+}
