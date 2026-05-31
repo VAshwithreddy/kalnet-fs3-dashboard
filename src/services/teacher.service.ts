@@ -150,3 +150,18 @@ export async function updateLeaveRequestStatus(id: number, status: "APPROVED" | 
 
   return updatedLeave;
 }
+
+export async function getTeacherRequests() {
+  return prisma.approvalRequest.findMany({
+    orderBy: { createdAt: "desc" }
+  });
+}
+
+export async function createTeacherRequest(type: string) {
+  return prisma.approvalRequest.create({
+    data: {
+      type,
+      status: "PENDING",
+    }
+  });
+}
