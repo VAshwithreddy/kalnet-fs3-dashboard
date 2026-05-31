@@ -9,8 +9,17 @@ import { useAuth } from "@/context/AuthContext";
 export default function TeacherLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { role } = useAuth();
+  const { role, user, logout } = useAuth();
   const [isCollapsed, setIsCollapsed] = useState(false);
+
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .substring(0, 2);
+  };
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isActionsOpen, setIsActionsOpen] = useState(false);
 
@@ -77,14 +86,22 @@ export default function TeacherLayout({ children }: { children: React.ReactNode 
           <div className={`flex items-center ${isCollapsed ? 'justify-center' : ''}`}>
             <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-primary-light p-0.5 flex-shrink-0">
               <div className="w-full h-full bg-bg-card rounded-full flex items-center justify-center text-text-heading">
-                <span className="text-sm font-bold">TC</span>
+                <span className="text-sm font-bold">{user ? getInitials(user.name) : "TC"}</span>
               </div>
             </div>
             {!isCollapsed && (
               <div className="ml-3 overflow-hidden">
-                <div className="text-sm font-medium text-text-heading whitespace-nowrap">Teacher User</div>
-                <div className="text-xs text-text-muted whitespace-nowrap overflow-hidden text-ellipsis">teacher@kalnet.edu</div>
-                <button onClick={() => router.push("/")} className="text-xs text-danger hover:underline mt-1 block">Log out</button>
+                <div className="text-sm font-medium text-text-heading whitespace-nowrap">{user?.name || "Teacher User"}</div>
+                <div className="text-xs text-text-muted whitespace-nowrap overflow-hidden text-ellipsis">{user?.email || "teacher@kalnet.edu"}</div>
+                <button 
+                  onClick={() => {
+                    logout();
+                    router.push("/");
+                  }} 
+                  className="text-xs text-danger hover:underline mt-1 block"
+                >
+                  Log out
+                </button>
               </div>
             )}
           </div>
