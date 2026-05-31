@@ -155,3 +155,16 @@ export async function getDashboardCharts(monthsCount?: number) {
     feeCollected: paymentMap[month] || 0,
   }));
 }
+
+/* ============================================================
+   ✅ Update Approval Request Status
+============================================================ */
+export async function updateApprovalRequestStatus(id: number, status: "APPROVED" | "REJECTED") {
+  return prisma.approvalRequest.update({
+    where: { id },
+    data: {
+      status,
+      resolvedAt: new Date(),
+    },
+  });
+}

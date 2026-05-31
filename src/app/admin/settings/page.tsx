@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import { Save, Bell, Shield, Key, User as UserIcon, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { Save, Bell, Shield, User as UserIcon, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("profile");
@@ -161,17 +161,6 @@ export default function SettingsPage() {
             <Bell className={`w-5 h-5 mr-3 ${activeTab === "notifications" ? "text-primary" : ""}`} />
             Notifications
           </button>
-          <button 
-            onClick={() => setActiveTab("api")}
-            className={`w-full flex items-center px-4 py-3 rounded-xl transition-all ${
-              activeTab === "api" 
-                ? "bg-primary-ghost text-primary font-medium" 
-                : "text-text-secondary hover:text-text-heading hover:bg-bg-card-hover"
-            }`}
-          >
-            <Key className={`w-5 h-5 mr-3 ${activeTab === "api" ? "text-primary" : ""}`} />
-            API Keys
-          </button>
         </div>
 
         {/* Settings Content */}
@@ -299,7 +288,7 @@ export default function SettingsPage() {
             </div>
           )}
 
-          {(activeTab === "notifications" || activeTab === "api") && (
+          {activeTab === "notifications" && (
             <div className="py-12 text-center text-text-secondary">
               <p>This section is under construction.</p>
             </div>

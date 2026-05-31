@@ -9,7 +9,10 @@ import {
   BadgeDollarSign, 
   UserPlus, 
   CalendarOff, 
-  ClipboardCheck 
+  ClipboardCheck,
+  Check,
+  X,
+  Loader2
 } from "lucide-react";
 
 interface Approval {
@@ -44,6 +47,33 @@ export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [processingId, setProcessingId] = useState<number | null>(null);
+
+  const handleApproveReject = async (id: number, status: 'APPROVED' | 'REJECTED') => {
+    setProcessingId(id);
+    try {
+      const res = await fetch("/api/dashboard/approvals", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status })
+      });
+      if (res.ok) {
+        // Refresh stats
+        const statsRes = await fetch("/api/dashboard/stats");
+        if (statsRes.ok) {
+          const statsData = await statsRes.json();
+          setStats(statsData);
+        }
+      } else {
+        alert("Failed to update approval request.");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("An error occurred while updating the approval request.");
+    } finally {
+      setProcessingId(null);
+    }
+  };
 
   useEffect(() => {
     async function fetchStats() {
@@ -147,23 +177,52 @@ export default function DashboardPage() {
                   <th className="pb-3 font-medium">Type</th>
                   <th className="pb-3 font-medium">Status</th>
                   <th className="pb-3 font-medium">Date</th>
+                  <th className="pb-3 font-medium text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="text-sm">
                 {stats?.latestApprovals?.map((item) => (
-                  <tr key={item.id} className="border-b border-border/50 last:border-0 hover:bg-bg-app">
-                    <td className="py-3 text-text-heading">{item.type}</td>
+                  <tr key={item.id} className="border-b border-border/50 last:border-0 hover:bg-bg-app/50 transition-colors">
+                    <td className="py-3 text-text-heading font-medium">{item.type}</td>
                     <td className="py-3">
-                      <span className={`px-2 py-1 rounded-full text-xs ${item.status === 'APPROVED' ? 'bg-success/10 text-success' : item.status === 'PENDING' ? 'bg-warning/10 text-warning' : 'bg-danger/10 text-danger'}`}>
+                      <span className={`px-2 py-1 rounded-full text-xs ${item.status === 'APPROVED' ? 'bg-success/10 text-success' : item.status === 'PENDING' ? 'bg-warning/10 text-warning animate-pulse' : 'bg-danger/10 text-danger'}`}>
                         {item.status}
                       </span>
                     </td>
                     <td className="py-3 text-text-secondary">{new Date(item.createdAt).toLocaleDateString()}</td>
+                    <td className="py-3 text-right">
+                      {item.status === "PENDING" ? (
+                        processingId === item.id ? (
+                          <div className="flex justify-end pr-4">
+                            <Loader2 className="w-4 h-4 text-primary animate-spin" />
+                          </div>
+                        ) : (
+                          <div className="flex justify-end gap-2">
+                            <button
+                              onClick={() => handleApproveReject(item.id, "APPROVED")}
+                              className="p-1 bg-green/10 text-green border border-green/20 rounded-md hover:bg-green hover:text-white transition-all shadow-sm"
+                              title="Approve"
+                            >
+                              <Check className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleApproveReject(item.id, "REJECTED")}
+                              className="p-1 bg-danger/10 text-danger border border-danger/20 rounded-md hover:bg-danger hover:text-white transition-all shadow-sm"
+                              title="Reject"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        )
+                      ) : (
+                        <span className="text-xs text-text-muted pr-2">Resolved</span>
+                      )}
+                    </td>
                   </tr>
                 ))}
                 {!stats?.latestApprovals?.length && (
                   <tr>
-                    <td colSpan={3} className="py-4 text-center text-text-secondary">No recent approvals</td>
+                    <td colSpan={4} className="py-4 text-center text-text-secondary">No recent approvals</td>
                   </tr>
                 )}
               </tbody>
