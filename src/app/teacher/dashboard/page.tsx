@@ -14,10 +14,12 @@ import {
   Clock,
   Check,
   X,
-  Loader2,
-  Bell
+  Loader2
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
+import { MetricCardSkeleton, ChartSkeleton, TableSkeleton } from "@/components/Skeletons";
+import { ConfirmationModal } from "@/components/ConfirmationModal";
+import { toast } from "sonner";
 
 interface Student {
   admissionNo: string | null;
@@ -61,14 +63,16 @@ export default function TeacherDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  // Action state (for button spinners)
+  // Action states
   const [processingId, setProcessingId] = useState<number | null>(null);
-  const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null);
-
-  const showNotification = (type: 'success' | 'error', message: string) => {
-    setNotification({ type, message });
-    setTimeout(() => setNotification(null), 4000);
-  };
+  
+  // Confirmation Modal state
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    leaveId: number;
+    status: "APPROVED" | "REJECTED";
+    studentName: string;
+  } | null>(null);
 
   async function fetchDashboardData() {
     try {
@@ -81,23 +85,37 @@ export default function TeacherDashboard() {
       }
     } catch (e) {
       console.error(e);
-      setError("A network error occurred.");
+      setError("A network/server error occurred.");
     } finally {
       setLoading(false);
     }
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchDashboardData();
   }, []);
 
-  const handleUpdateLeaveStatus = async (id: number, status: "APPROVED" | "REJECTED") => {
-    setProcessingId(id);
+  const handleOpenConfirm = (id: number, status: "APPROVED" | "REJECTED", studentName: string) => {
+    setConfirmModal({
+      isOpen: true,
+      leaveId: id,
+      status,
+      studentName
+    });
+  };
+
+  const handleConfirmLeaveStatus = async () => {
+    if (!confirmModal) return;
+    const { leaveId, status } = confirmModal;
+    setConfirmModal(null);
+    setProcessingId(leaveId);
+
     try {
       const res = await fetch("/api/teacher/leaves", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, status })
+        body: JSON.stringify({ id: leaveId, status })
       });
 
       if (!res.ok) {
@@ -105,39 +123,71 @@ export default function TeacherDashboard() {
         throw new Error(errData.error || "Failed to update status");
       }
 
-      showNotification("success", `Leave request successfully ${status.toLowerCase()}!`);
-      // Refresh statistics & table
+      toast.success(`Leave request successfully ${status.toLowerCase()}!`);
       await fetchDashboardData();
     } catch (e: unknown) {
-      showNotification("error", e instanceof Error ? e.message : "Error updating leave request");
+      toast.error(e instanceof Error ? e.message : "Error updating leave request");
     } finally {
       setProcessingId(null);
     }
   };
 
-  if (loading) {
+  if (error) {
     return (
       <div className="p-8 flex justify-center items-center min-h-[500px]">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="animate-spin h-10 w-10 text-primary" />
-          <span className="text-sm text-text-secondary">Loading your workspace...</span>
+        <div className="bg-danger/10 border border-danger/20 p-6 rounded-2xl text-center max-w-md">
+          <AlertCircle className="w-12 h-12 text-danger mx-auto mb-3" />
+          <div className="text-lg font-semibold text-danger mb-2">Error Loading Dashboard</div>
+          <p className="text-sm text-text-secondary mb-4">{error}</p>
+          <button 
+            onClick={() => { setLoading(true); setError(null); fetchDashboardData(); }}
+            className="mt-4 px-4 py-2 bg-bg-app border border-border rounded-lg text-text-heading hover:bg-bg-input transition-all"
+          >
+            Try Again
+          </button>
         </div>
       </div>
     );
   }
 
-  if (error) {
+  // Skeletons Layout during Loading state
+  if (loading) {
     return (
-      <div className="p-8 flex justify-center items-center min-h-[500px]">
-        <div className="bg-danger/10 border border-danger/20 p-6 rounded-2xl text-center">
-          <AlertCircle className="w-12 h-12 text-danger mx-auto mb-3" />
-          <div className="text-lg font-semibold text-danger">{error}</div>
-          <button 
-            onClick={() => { setLoading(true); fetchDashboardData(); }}
-            className="mt-4 px-4 py-2 bg-bg-app border border-border rounded-lg text-text-heading hover:bg-bg-input transition-all"
-          >
-            Try Again
-          </button>
+      <div className="p-8 space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold text-text-heading tracking-tight">Classroom Overview</h1>
+          <p className="text-text-secondary mt-2">Manage your current classes, schedules, and student requests.</p>
+        </div>
+        
+        {/* Metric Cards Skeletons */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6 gap-6">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <MetricCardSkeleton key={i} />
+          ))}
+        </div>
+
+        {/* Timetable and Chart Skeletons */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="bg-bg-card border border-border p-6 rounded-2xl flex flex-col justify-between h-80">
+            <div className="flex items-center gap-2 mb-4">
+              <Clock className="w-5 h-5 text-primary" />
+              <span className="text-text-heading font-semibold">Today&apos;s Schedule</span>
+            </div>
+            <div className="flex-1 space-y-3.5">
+              <div className="h-10 bg-bg-card-hover/40 rounded-xl animate-pulse" />
+              <div className="h-10 bg-bg-card-hover/40 rounded-xl animate-pulse" />
+              <div className="h-10 bg-bg-card-hover/40 rounded-xl animate-pulse" />
+            </div>
+          </div>
+          <div className="lg:col-span-2">
+            <ChartSkeleton />
+          </div>
+        </div>
+
+        {/* Table Skeleton for Leaves */}
+        <div className="bg-bg-card border border-border p-6 rounded-2xl">
+          <div className="h-6 w-48 mb-6 bg-bg-card-hover/40 rounded animate-pulse" />
+          <TableSkeleton columns={5} rows={3} />
         </div>
       </div>
     );
@@ -154,7 +204,7 @@ export default function TeacherDashboard() {
     { title: "Upcoming Exams", value: data ? data.upcomingExams.toString() : "0", trend: "Next: Wed", trendUp: true, icon: Calendar, sparklineData: [1, 2, 1, 3, 2, 2, 2] },
   ];
 
-  // Recharts Chart Data: Attendance Rate per Class
+  // Attendance Rate per Class
   const attendanceChartData = [
     { className: "Grade 10-A", rate: 96.5 },
     { className: "Grade 11-B", rate: 94.2 },
@@ -164,14 +214,6 @@ export default function TeacherDashboard() {
 
   return (
     <div className="p-8 relative">
-      {/* Toast Notification */}
-      {notification && (
-        <div className={`fixed top-6 right-6 z-50 flex items-center p-4 rounded-xl shadow-shadow-elevated border animate-in fade-in slide-in-from-top-4 duration-300 ${notification.type === 'success' ? 'bg-green/10 border-green/20 text-green' : 'bg-danger/10 border-danger/20 text-danger'}`}>
-          {notification.type === 'success' ? <CheckCircle2 className="w-5 h-5 mr-3" /> : <AlertCircle className="w-5 h-5 mr-3" />}
-          <p className="font-medium text-sm">{notification.message}</p>
-        </div>
-      )}
-
       <div className="flex justify-between items-end mb-8">
         <div>
           <h1 className="text-3xl font-bold text-text-heading tracking-tight">Classroom Overview</h1>
@@ -200,9 +242,9 @@ export default function TeacherDashboard() {
         <div className="bg-bg-card border border-border shadow-shadow-card p-6 rounded-2xl flex flex-col transition-all duration-300 hover:shadow-shadow-elevated hover:bg-bg-card-hover">
           <div className="flex items-center gap-2 mb-4">
             <Clock className="w-5 h-5 text-primary" />
-            <div className="text-text-heading font-semibold">Today's Schedule</div>
+            <div className="text-text-heading font-semibold">Today&apos;s Schedule</div>
           </div>
-          <div className="flex-1 overflow-y-auto space-y-4 pr-1">
+          <div className="flex-1 overflow-y-auto space-y-4 pr-1 max-h-[260px]">
             {data?.schedule.map((item) => (
               <div 
                 key={item.id} 
@@ -251,6 +293,7 @@ export default function TeacherDashboard() {
                   contentStyle={{ backgroundColor: "#13151A", borderColor: "#1F2937", borderRadius: "12px" }}
                   labelStyle={{ color: "#E5E7EB", fontWeight: "bold" }}
                   itemStyle={{ color: "#A78BFA" }}
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   formatter={(value: any) => [`${value}%`, "Attendance"]}
                 />
                 <Bar dataKey="rate" radius={[8, 8, 0, 0]} maxBarSize={45}>
@@ -323,15 +366,15 @@ export default function TeacherDashboard() {
                     ) : (
                       <div className="flex justify-end gap-2">
                         <button
-                          onClick={() => handleUpdateLeaveStatus(item.id, "APPROVED")}
-                          className="p-1.5 bg-green/10 text-green border border-green/20 rounded-lg hover:bg-green hover:text-white transition-all hover:scale-105 shadow-sm"
+                          onClick={() => handleOpenConfirm(item.id, "APPROVED", `${item.student.firstName} ${item.student.lastName}`)}
+                          className="p-1.5 bg-green/10 text-green border border-green/20 rounded-lg hover:bg-green hover:text-white transition-all hover:scale-105 shadow-sm cursor-pointer"
                           title="Approve Leave"
                         >
                           <Check className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => handleUpdateLeaveStatus(item.id, "REJECTED")}
-                          className="p-1.5 bg-danger/10 text-danger border border-danger/20 rounded-lg hover:bg-danger hover:text-white transition-all hover:scale-105 shadow-sm"
+                          onClick={() => handleOpenConfirm(item.id, "REJECTED", `${item.student.firstName} ${item.student.lastName}`)}
+                          className="p-1.5 bg-danger/10 text-danger border border-danger/20 rounded-lg hover:bg-danger hover:text-white transition-all hover:scale-105 shadow-sm cursor-pointer"
                           title="Reject Leave"
                         >
                           <X className="w-4 h-4" />
@@ -353,6 +396,21 @@ export default function TeacherDashboard() {
           </table>
         </div>
       </div>
+
+      {/* Confirmation Modal */}
+      {confirmModal && (
+        <ConfirmationModal
+          isOpen={confirmModal.isOpen}
+          title={confirmModal.status === "APPROVED" ? "Approve Leave Request" : "Reject Leave Request"}
+          message={`Are you sure you want to ${confirmModal.status.toLowerCase()} the leave request for ${confirmModal.studentName}?`}
+          confirmLabel={confirmModal.status === "APPROVED" ? "Approve" : "Reject"}
+          cancelLabel="Cancel"
+          isDestructive={confirmModal.status === "REJECTED"}
+          onConfirm={handleConfirmLeaveStatus}
+          onCancel={() => setConfirmModal(null)}
+        />
+      )}
     </div>
   );
 }
+
