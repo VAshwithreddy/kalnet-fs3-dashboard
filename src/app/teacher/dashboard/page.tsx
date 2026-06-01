@@ -14,8 +14,7 @@ import {
   Clock,
   Check,
   X,
-  Loader2,
-  Bell
+  Loader2
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { MetricCardSkeleton, ChartSkeleton, TableSkeleton } from "@/components/Skeletons";
@@ -93,6 +92,7 @@ export default function TeacherDashboard() {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchDashboardData();
   }, []);
 
@@ -171,7 +171,7 @@ export default function TeacherDashboard() {
           <div className="bg-bg-card border border-border p-6 rounded-2xl flex flex-col justify-between h-80">
             <div className="flex items-center gap-2 mb-4">
               <Clock className="w-5 h-5 text-primary" />
-              <span className="text-text-heading font-semibold">Today's Schedule</span>
+              <span className="text-text-heading font-semibold">Today&apos;s Schedule</span>
             </div>
             <div className="flex-1 space-y-3.5">
               <div className="h-10 bg-bg-card-hover/40 rounded-xl animate-pulse" />
@@ -242,7 +242,7 @@ export default function TeacherDashboard() {
         <div className="bg-bg-card border border-border shadow-shadow-card p-6 rounded-2xl flex flex-col transition-all duration-300 hover:shadow-shadow-elevated hover:bg-bg-card-hover">
           <div className="flex items-center gap-2 mb-4">
             <Clock className="w-5 h-5 text-primary" />
-            <div className="text-text-heading font-semibold">Today's Schedule</div>
+            <div className="text-text-heading font-semibold">Today&apos;s Schedule</div>
           </div>
           <div className="flex-1 overflow-y-auto space-y-4 pr-1 max-h-[260px]">
             {data?.schedule.map((item) => (
@@ -293,6 +293,7 @@ export default function TeacherDashboard() {
                   contentStyle={{ backgroundColor: "#13151A", borderColor: "#1F2937", borderRadius: "12px" }}
                   labelStyle={{ color: "#E5E7EB", fontWeight: "bold" }}
                   itemStyle={{ color: "#A78BFA" }}
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   formatter={(value: any) => [`${value}%`, "Attendance"]}
                 />
                 <Bar dataKey="rate" radius={[8, 8, 0, 0]} maxBarSize={45}>

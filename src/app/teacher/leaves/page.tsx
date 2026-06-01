@@ -2,15 +2,11 @@
 
 import React, { useState, useEffect } from "react";
 import { 
-  CalendarOff,
-  CheckCircle2,
   AlertCircle,
   Check,
   X,
   Loader2,
-  Calendar,
-  User,
-  Filter
+  Calendar
 } from "lucide-react";
 import { TableSkeleton } from "@/components/Skeletons";
 import { EmptyState } from "@/components/EmptyState";
@@ -67,6 +63,7 @@ export default function LeavesManagementPage() {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchLeaves();
   }, []);
 

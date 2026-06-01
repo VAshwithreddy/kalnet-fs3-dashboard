@@ -32,7 +32,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     if (savedUser) {
       try {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setUser(JSON.parse(savedUser));
       } catch (e) {
         console.error(e);

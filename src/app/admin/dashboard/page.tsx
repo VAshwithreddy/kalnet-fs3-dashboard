@@ -15,7 +15,7 @@ import {
   Loader2,
   AlertCircle
 } from "lucide-react";
-import { MetricCardSkeleton, TableSkeleton } from "@/components/Skeletons";
+import { MetricCardSkeleton } from "@/components/Skeletons";
 import { ConfirmationModal } from "@/components/ConfirmationModal";
 import { toast } from "sonner";
 
@@ -115,6 +115,7 @@ export default function DashboardPage() {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchStats();
   }, []);
 

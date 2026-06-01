@@ -3,12 +3,9 @@
 import React, { useState, useEffect } from "react";
 import { 
   Send,
-  CheckCircle2,
   AlertCircle,
   Loader2,
   ClipboardList,
-  Calendar,
-  Layers,
   Sparkles,
   Check
 } from "lucide-react";
@@ -43,12 +40,6 @@ export default function MyRequestsPage() {
   const [toDateTouched, setToDateTouched] = useState(false);
   const [reasonTouched, setReasonTouched] = useState(false);
 
-  const [validationErrors, setValidationErrors] = useState<{
-    fromDate?: string;
-    toDate?: string;
-    reason?: string;
-  }>({});
-
   const todayStr = new Date().toISOString().split("T")[0];
 
   // Fetch Requests
@@ -70,11 +61,12 @@ export default function MyRequestsPage() {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchRequests();
   }, []);
 
-  // Real-time validations
-  useEffect(() => {
+  // Real-time validations calculated dynamically on render
+  const getValidationErrors = () => {
     const errors: { fromDate?: string; toDate?: string; reason?: string } = {};
 
     if (requestType === "Leave Request") {
@@ -99,8 +91,10 @@ export default function MyRequestsPage() {
       }
     }
 
-    setValidationErrors(errors);
-  }, [requestType, fromDate, toDate, reason, fromDateTouched, toDateTouched, reasonTouched]);
+    return errors;
+  };
+
+  const validationErrors = getValidationErrors();
 
   const handleSubmitRequest = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -127,7 +121,6 @@ export default function MyRequestsPage() {
       }
 
       if (Object.keys(errors).length > 0) {
-        setValidationErrors(errors);
         toast.error("Please fix form errors before submitting.");
         return;
       }

@@ -18,7 +18,6 @@ export default function Home() {
   // Validation & interaction states
   const [emailTouched, setEmailTouched] = useState(false);
   const [passwordTouched, setPasswordTouched] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<{ email?: string; password?: string }>({});
 
   // Demo credentials state
   const [demoCreds, setDemoCreds] = useState<{ admin: string; teacher: string } | null>(null);
@@ -44,8 +43,7 @@ export default function Home() {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
   };
 
-  // Real-time validation hook
-  useEffect(() => {
+  const getValidationErrors = () => {
     const errors: { email?: string; password?: string } = {};
     if (emailTouched) {
       if (!email) {
@@ -61,8 +59,10 @@ export default function Home() {
         errors.password = "Password must be at least 6 characters long.";
       }
     }
-    setValidationErrors(errors);
-  }, [email, password, emailTouched, passwordTouched]);
+    return errors;
+  };
+
+  const validationErrors = getValidationErrors();
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,7 +84,6 @@ export default function Home() {
     }
 
     if (Object.keys(errors).length > 0) {
-      setValidationErrors(errors);
       setError("Please fix the validation errors below.");
       return;
     }

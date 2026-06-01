@@ -28,7 +28,7 @@ export default function UsersPage() {
     isOpen: boolean;
     userId: string;
     actionType: "toggleStatus" | "changeRole";
-    nextValue: any;
+    nextValue: boolean | Role;
     userName: string;
   } | null>(null);
 
@@ -58,6 +58,7 @@ export default function UsersPage() {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchUsers();
   }, []);
 
@@ -87,11 +88,11 @@ export default function UsersPage() {
     setConfirmModal(null);
 
     if (actionType === "toggleStatus") {
-      setUsers(users.map(u => u.id === userId ? { ...u, isActive: nextValue } : u));
+      setUsers(users.map(u => u.id === userId ? { ...u, isActive: nextValue as boolean } : u));
       toast.success(`${userName}'s account has been ${nextValue ? "enabled" : "disabled"} successfully.`);
     } else if (actionType === "changeRole") {
-      setUsers(users.map(u => u.id === userId ? { ...u, role: nextValue } : u));
-      toast.success(`Role for ${userName} updated to ${nextValue.toLowerCase()} successfully.`);
+      setUsers(users.map(u => u.id === userId ? { ...u, role: nextValue as Role } : u));
+      toast.success(`Role for ${userName} updated to ${String(nextValue).toLowerCase()} successfully.`);
     }
   };
 
