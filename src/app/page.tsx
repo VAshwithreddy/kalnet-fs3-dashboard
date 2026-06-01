@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { CopySlash, Shield, User, Lock, Mail, Loader2, AlertCircle } from "lucide-react";
+import { CopySlash, Shield, User, Lock, Mail, Loader2, AlertCircle, Check } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 
@@ -14,6 +14,11 @@ export default function Home() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Validation & interaction states
+  const [emailTouched, setEmailTouched] = useState(false);
+  const [passwordTouched, setPasswordTouched] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<{ email?: string; password?: string }>({});
 
   // Demo credentials state
   const [demoCreds, setDemoCreds] = useState<{ admin: string; teacher: string } | null>(null);
@@ -34,10 +39,53 @@ export default function Home() {
     fetchDemo();
   }, []);
 
+  // Email format regex helper
+  const isEmailValid = (val: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+  };
+
+  // Real-time validation hook
+  useEffect(() => {
+    const errors: { email?: string; password?: string } = {};
+    if (emailTouched) {
+      if (!email) {
+        errors.email = "Email address is required.";
+      } else if (!isEmailValid(email)) {
+        errors.email = "Email must be valid (e.g. user@domain.com).";
+      }
+    }
+    if (passwordTouched) {
+      if (!password) {
+        errors.password = "Password is required.";
+      } else if (password.length < 6) {
+        errors.password = "Password must be at least 6 characters long.";
+      }
+    }
+    setValidationErrors(errors);
+  }, [email, password, emailTouched, passwordTouched]);
+
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Set all fields to touched to trigger validation visuals
+    setEmailTouched(true);
+    setPasswordTouched(true);
+
+    const errors: { email?: string; password?: string } = {};
     if (!email) {
-      setError("Please enter your registered email address.");
+      errors.email = "Email address is required.";
+    } else if (!isEmailValid(email)) {
+      errors.email = "Email must be valid (e.g. user@domain.com).";
+    }
+    if (!password) {
+      errors.password = "Password is required.";
+    } else if (password.length < 6) {
+      errors.password = "Password must be at least 6 characters long.";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      setError("Please fix the validation errors below.");
       return;
     }
 
@@ -83,6 +131,9 @@ export default function Home() {
       setEmail(demoCreds.teacher);
       setPassword("teacher123");
     }
+    // Reset validation errors
+    setEmailTouched(true);
+    setPasswordTouched(true);
     setError(null);
   };
 
@@ -99,9 +150,47 @@ export default function Home() {
         </h1>
         <p className="text-text-secondary text-sm text-center mb-6">Enter your credentials to access the portal.</p>
 
-        {/* Error Box */}
-        {error && (
-          <div className="mb-5 p-3.5 bg-danger/10 border border-danger/20 rounded-xl text-danger text-sm flex items-start gap-2.5">
+        {/* Validation Errors Summary Box */}
+        {Object.keys(validationErrors).length > 0 && (
+          <div id="error-summary" className="mb-5 p-3.5 bg-danger/10 border border-danger/20 rounded-xl text-danger text-sm animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="flex items-start gap-2 mb-2 font-semibold">
+              <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+              <span>Please resolve the following errors:</span>
+            </div>
+            <ul className="list-disc pl-5 space-y-1 text-xs">
+              {validationErrors.email && (
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      document.getElementById("email-input")?.focus();
+                    }}
+                    className="underline text-left hover:text-red-700 transition-colors"
+                  >
+                    {validationErrors.email}
+                  </button>
+                </li>
+              )}
+              {validationErrors.password && (
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      document.getElementById("password-input")?.focus();
+                    }}
+                    className="underline text-left hover:text-red-700 transition-colors"
+                  >
+                    {validationErrors.password}
+                  </button>
+                </li>
+              )}
+            </ul>
+          </div>
+        )}
+
+        {/* General/API Error Box */}
+        {error && Object.keys(validationErrors).length === 0 && (
+          <div className="mb-5 p-3.5 bg-danger/10 border border-danger/20 rounded-xl text-danger text-sm flex items-start gap-2.5 animate-in fade-in duration-300">
             <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
             <span>{error}</span>
           </div>
@@ -114,13 +203,30 @@ export default function Home() {
             <div className="relative">
               <Mail className="w-4 h-4 text-text-muted absolute left-3.5 top-3.5" />
               <input 
+                id="email-input"
                 type="email" 
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setEmailTouched(true);
+                }}
+                onBlur={() => setEmailTouched(true)}
                 placeholder="name@kalnet.edu"
-                className="w-full bg-bg-app border border-border rounded-lg pl-10 pr-4 py-2.5 text-text-heading focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/50 text-sm" 
+                className={`w-full bg-bg-app border rounded-lg pl-10 pr-10 py-2.5 text-text-heading focus:outline-none focus:ring-1 text-sm transition-all ${
+                  validationErrors.email
+                    ? "border-danger focus:border-danger focus:ring-danger/50"
+                    : email && isEmailValid(email)
+                    ? "border-green focus:border-green focus:ring-green/50"
+                    : "border-border focus:border-primary focus:ring-primary/50"
+                }`}
               />
+              {email && isEmailValid(email) && (
+                <Check className="w-4.5 h-4.5 text-green absolute right-3.5 top-3" />
+              )}
             </div>
+            {validationErrors.email && (
+              <p className="mt-1 text-xs text-danger animate-in fade-in duration-200">{validationErrors.email}</p>
+            )}
           </div>
 
           <div>
@@ -128,13 +234,25 @@ export default function Home() {
             <div className="relative">
               <Lock className="w-4 h-4 text-text-muted absolute left-3.5 top-3.5" />
               <input 
+                id="password-input"
                 type="password" 
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setPasswordTouched(true);
+                }}
+                onBlur={() => setPasswordTouched(true)}
                 placeholder="••••••••"
-                className="w-full bg-bg-app border border-border rounded-lg pl-10 pr-4 py-2.5 text-text-heading focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/50 text-sm" 
+                className={`w-full bg-bg-app border rounded-lg pl-10 pr-4 py-2.5 text-text-heading focus:outline-none focus:ring-1 text-sm transition-all ${
+                  validationErrors.password
+                    ? "border-danger focus:border-danger focus:ring-danger/50"
+                    : "border-border focus:border-primary focus:ring-primary/50"
+                }`}
               />
             </div>
+            {validationErrors.password && (
+              <p className="mt-1 text-xs text-danger animate-in fade-in duration-200">{validationErrors.password}</p>
+            )}
           </div>
 
           <button
@@ -143,11 +261,13 @@ export default function Home() {
             className="w-full mt-2 flex items-center justify-center px-4 py-2.5 bg-primary text-text-on-primary rounded-xl shadow-shadow-btn hover:bg-primary-mid transition-all font-semibold disabled:opacity-70 disabled:cursor-not-allowed"
           >
             {loading ? (
-              <Loader2 className="w-5 h-5 animate-spin mr-2" />
+              <>
+                <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                Authenticating...
+              </>
             ) : (
               "Log In"
             )}
-            {loading ? "Authenticating..." : "Log In"}
           </button>
         </form>
 
@@ -188,3 +308,4 @@ export default function Home() {
     </div>
   );
 }
+
