@@ -7,18 +7,63 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum UserRole {
+  ADMIN
+  STAFF
+  TEACHER
+}
+
+enum StaffStatus {
+  ACTIVE
+  INACTIVE
+  ON_LEAVE
+}
+
+enum FeeStatus {
+  ISSUED
+  PARTIALLY_PAID
+  PENDING
+  PAID
+  OVERDUE
+  WAIVED
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model User {
   id        Int      @id @default(autoincrement())
   email     String   @unique
   name      String
-  role      String   @default("STAFF")
-  status    String   @default("ACTIVE")
+  role       UserRole @default(STAFF)
+  status     String   @default("ACTIVE")
+  department String?
+  activeStatuses StaffActiveStatus[]
+  staffLeaves    StaffLeaveRequest[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([role])
   @@index([status])
   @@map("users")
+}
+
+model StaffActiveStatus {
+  id         Int @id @default(autoincrement())
+  staffId    Int
+  markedDate DateTime
+  status     StaffStatus
+  markedAt   DateTime @default(now())
+  markedBy   Int?
+
+  staff User @relation(fields: [staffId], references: [id])
+
+  @@unique([staffId, markedDate])
+  @@index([staffId, markedDate])
+  @@map("staff_active_status")
 }
 
 model Student {
@@ -52,18 +97,7 @@ model Admission {
   @@map("admissions")
 }
 
-model ApprovalRequest {
-  id         Int       @id @default(autoincrement())
-  type       String
-  status     String    @default("PENDING")
-  createdAt  DateTime  @default(now())
-  resolvedAt DateTime?
 
-  @@index([status])
-  @@index([createdAt])
-  @@index([type])
-  @@map("approval_requests")
-}
 
 model LeaveRequest {
   id        Int      @id @default(autoincrement())
@@ -73,13 +107,90 @@ model LeaveRequest {
   reason    String?
   status    String   @default("PENDING")
   createdAt DateTime @default(now())
+  requestedAt DateTime @default(now())
+  rejectionReason String?
+  studentParentNotified Boolean @default(false)
 
   student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@index([status])
   @@index([createdAt])
   @@index([studentId])
+  @@index([studentId, status])
   @@map("leave_requests")
+}
+
+model StaffLeaveRequest {
+  id         Int @id @default(autoincrement())
+  staffId    Int
+  fromDate   DateTime
+  toDate     DateTime
+  reason     String?
+  status     String @default("PENDING")
+
+  approvedBy Int?
+  approvedAt DateTime?
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  staff User @relation(fields: [staffId], references: [id])
+
+  @@index([staffId])
+  @@index([status])
+  @@map("staff_leave_requests")
+}
+
+model LeaveApprovalRequest {
+  id             Int @id @default(autoincrement())
+
+  requestType    String
+
+  linkedEntityId Int
+
+  requestedBy    Int
+
+  reviewedBy     Int?
+
+  status         ApprovalStatus @default(PENDING)
+
+  approvalNotes  String?
+
+  createdAt      DateTime @default(now())
+
+  updatedAt      DateTime @updatedAt
+
+  @@index([status])
+  @@index([createdAt, status])
+
+  @@map("leave_approval_requests")
+}
+
+model FeeAdjustmentRequest {
+  id               Int @id @default(autoincrement())
+
+  invoiceId        Int
+
+  requestedBy      Int
+
+  reviewedBy       Int?
+
+  requestType      String
+
+  status           ApprovalStatus @default(PENDING)
+
+  adjustmentAmount Float?
+
+  approvalNotes    String?
+
+  createdAt        DateTime @default(now())
+
+  updatedAt        DateTime @updatedAt
+
+  @@index([status])
+  @@index([createdAt, status])
+
+  @@map("fee_adjustment_requests")
 }
 
 model FeeInvoice {
@@ -88,7 +199,11 @@ model FeeInvoice {
   issueDate   DateTime @default(now())
   dueDate     DateTime?
   totalAmount Float
-  status      String   @default("ISSUED")
+  status      FeeStatus @default(ISSUED)
+
+  updatedBy   Int?
+  fineAmount  Float @default(0)
+  paidAmount  Float @default(0)
 
   student     Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
   payments    FeePayment[]
@@ -96,6 +211,7 @@ model FeeInvoice {
   @@index([studentId])
   @@index([issueDate])
   @@index([status])
+  @@index([studentId, dueDate, status])
   @@map("fee_invoices")
 }
 
@@ -121,12 +237,35 @@ model FeePayment {
   @@map("fee_payments")
 }
 
+model FeePaymentLog {
+  id              Int @id @default(autoincrement())
+
+  invoiceId       Int
+
+  paymentAmount   Float
+
+  paymentMethod   String?
+
+  updatedBy       Int?
+
+  updatedAt       DateTime @default(now())
+
+  adjustmentReason String?
+
+  @@index([invoiceId])
+  @@map("fee_payment_logs")
+}
+
 model AuditLog {
   id        Int      @id @default(autoincrement())
   action    String
   entity    String
   entityId  Int
   meta      String?
+  performedBy Int?
+  changeDetails String?
+  ipAddress String?
+  userAgent String?
   createdAt DateTime @default(now())
 
   @@index([entity])
