@@ -44,10 +44,10 @@ export async function getDashboardStats() {
     // 1️⃣ Total Students
     prisma.student.count(),
 
-    // 2️⃣ Pending Approvals
-    prisma.approvalRequest.count({
-      where: { status: "PENDING" },
-    }),
+   // 2️⃣ Pending Approvals
+   prisma.leaveApprovalRequest.count({
+   where: { status: "PENDING" },
+   }),
 
     // 3️⃣ Outstanding Fees (Sum of ISSUED invoices)
     prisma.feeInvoice.aggregate({
@@ -75,9 +75,9 @@ export async function getDashboardStats() {
     }),
 
     // 7️⃣ Latest Approvals
-    prisma.approvalRequest.findMany({
-      take: 5,
-      orderBy: { createdAt: "desc" },
+    prisma.leaveApprovalRequest.findMany({
+    take: 5,
+    orderBy: { createdAt: "desc" },
     }),
 
     // 8️⃣ Latest Admissions
@@ -159,7 +159,10 @@ export async function getDashboardCharts(monthsCount?: number) {
 /* ============================================================
    ✅ Update Approval Request Status
 ============================================================ */
-export async function updateApprovalRequestStatus(id: number, status: "APPROVED" | "REJECTED") {
+export async function updateApprovalRequestStatus(
+  id: number,
+  status: "APPROVED" | "REJECTED"
+) {
   return prisma.approvalRequest.update({
     where: { id },
     data: {

@@ -23,7 +23,8 @@ async function main() {
   await prisma.leaveRequest.deleteMany();
   await prisma.admission.deleteMany();
   await prisma.student.deleteMany();
-  await prisma.approvalRequest.deleteMany();
+  //await prisma.leaveApprovalRequest.deleteMany();
+  //await prisma.feeAdjustmentRequest.deleteMany();
   await prisma.user.deleteMany();
 
   // Users
@@ -111,18 +112,7 @@ async function main() {
     }
     
     // Add some random approval requests and leaves per month
-    await prisma.approvalRequest.create({
-      data: { type: 'Leave Request', status: i === months.length - 1 ? 'PENDING' : 'APPROVED', createdAt: new Date(`${ym}-05T10:00:00Z`) }
-    });
     
-    await prisma.approvalRequest.create({
-      data: { type: 'Expense Report', status: 'PENDING', createdAt: new Date(`${ym}-08T10:00:00Z`) }
-    });
-    
-    // Add audit logs
-    await prisma.auditLog.create({
-      data: { action: 'USER_LOGIN', entity: 'User', entityId: 1, createdAt: new Date(`${ym}-01T08:00:00Z`) }
-    });
   }
 
   console.log('Database seeded successfully with historical data!');
