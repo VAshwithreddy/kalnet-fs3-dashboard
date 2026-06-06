@@ -5,18 +5,20 @@ export async function logAudit(
   action: string,
   entity: string,
   entityId: number,
-  meta?: Prisma.InputJsonValue
+  performedBy: number,
+  changeDetails?: Prisma.InputJsonValue,
+  ipAddress?: string,
+  userAgent?: string
 ) {
-  try {
-    await prisma.auditLog.create({
-      data: {
-        action,
-        entity,
-        entityId,
-        meta,
-      },
-    });
-  } catch (error) {
-    console.error("Audit log failed:", error);
-  }
+  await prisma.auditLog.create({
+    data: {
+      action,
+      entity,
+      entityId,
+      performedBy,
+      changeDetails,
+      ipAddress,
+      userAgent,
+    },
+  });
 }
