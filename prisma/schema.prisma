@@ -6,7 +6,25 @@ datasource db {
   provider = "sqlite"
   url      = env("DATABASE_URL")
 }
+export async function requirePermission(userId: number, permission: string) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: {
+      roleRelation: {
+        include: {
+          permissions: {
+            include: { permission: true }
+          }
+        }
+      }
+    }
+  });
 
+  const hasPermission = user?.roleRelation?.permissions
+    .some(p => p.permission.name === permission);
+
+  if (!hasPermission) throw new Error("Forbidden");
+}
 enum UserRole {
   ADMIN
   STAFF
@@ -288,4 +306,25 @@ model AuditLog {
   @@index([entityId])
   @@index([createdAt])
   @@map("audit_logs")
+}
+model Role {
+  id Int @id @default(autoincrement())
+  name String @unique
+  permissions RolePermission[]
+}
+
+model Permission {
+  id Int @id @default(autoincrement())
+  name String @unique
+  roles RolePermission[]
+}
+
+model RolePermission {
+  roleId Int
+  permissionId Int
+
+  role Role @relation(fields: [roleId], references: [id])
+  permission Permission @relation(fields: [permissionId], references: [id])
+
+  @@id([roleId, permissionId])
 }

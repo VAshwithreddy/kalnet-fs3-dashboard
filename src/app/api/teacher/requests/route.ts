@@ -1,34 +1,23 @@
-import { NextResponse } from "next/server";
-import { getTeacherRequests, createTeacherRequest } from "@/services/teacher.service";
-import { serverError } from "@/lib/errors";
-
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
-
-export async function GET() {
-  try {
-    const data = await getTeacherRequests();
-    return NextResponse.json(data);
-  } catch (e) {
-    return serverError("Failed to fetch teacher requests", String(e));
-  }
-}
+import { prisma } from "@/lib/prisma";
+import { successResponse, errorResponse } from "@/lib/api-response";
+import { leaveSchema } from "@/lib/validators";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { type } = body;
+    const data = leaveSchema.parse(body);
 
-    if (!type || typeof type !== "string") {
-      return NextResponse.json(
-        { error: "Invalid parameters. 'type' (string) is required." },
-        { status: 400 }
-      );
-    }
+    const leave = await prisma.leaveRequest.create({
+      data: {
+        studentId: data.studentId,
+        fromDate: new Date(data.fromDate),
+        toDate: new Date(data.toDate),
+        reason: data.reason,
+      },
+    });
 
-    const newRequest = await createTeacherRequest(type);
-    return NextResponse.json(newRequest, { status: 201 });
-  } catch (e) {
-    return serverError("Failed to create approval request", String(e));
+    return successResponse(leave);
+  } catch (error: any) {
+    return errorResponse("BAD_REQUEST", error.message);
   }
 }
