@@ -1,6 +1,7 @@
 // services/dashboard.service.ts
 
 import { prisma } from "../lib/prisma";
+import { logAudit } from "../lib/audit";
 
 /* ============================================================
    Helper: Get Last N Months (YYYY-MM)
@@ -45,9 +46,13 @@ export async function getDashboardStats() {
     prisma.student.count(),
 
     // 2️⃣ Pending Approvals
-    prisma.approvalRequest.count({
-      where: { status: "PENDING" },
-    }),
+    (async () => {
+      const [leaveCount, feeCount] = await Promise.all([
+        prisma.leaveApprovalRequest.count({ where: { status: "PENDING" } }),
+        prisma.feeAdjustmentRequest.count({ where: { status: "PENDING" } }),
+      ]);
+      return leaveCount + feeCount;
+    })(),
 
     // 3️⃣ Outstanding Fees (Sum of ISSUED invoices)
     prisma.feeInvoice.aggregate({
@@ -75,10 +80,34 @@ export async function getDashboardStats() {
     }),
 
     // 7️⃣ Latest Approvals
-    prisma.approvalRequest.findMany({
-      take: 5,
-      orderBy: { createdAt: "desc" },
-    }),
+    (async () => {
+      const [leaveApprovals, feeApprovals] = await Promise.all([
+        prisma.leaveApprovalRequest.findMany({
+          take: 5,
+          orderBy: { createdAt: "desc" },
+        }),
+        prisma.feeAdjustmentRequest.findMany({
+          take: 5,
+          orderBy: { createdAt: "desc" },
+        }),
+      ]);
+      return [
+        ...leaveApprovals.map((a) => ({
+          id: a.id,
+          type: a.requestType,
+          status: a.status,
+          createdAt: a.createdAt,
+        })),
+        ...feeApprovals.map((a) => ({
+          id: a.id,
+          type: a.requestType,
+          status: a.status,
+          createdAt: a.createdAt,
+        })),
+      ]
+        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+        .slice(0, 5);
+    })(),
 
     // 8️⃣ Latest Admissions
     prisma.admission.findMany({
@@ -116,8 +145,10 @@ export async function getDashboardStats() {
 ============================================================ */
 export async function getDashboardCharts(monthsCount?: number) {
   const months = getLastMonths(monthsCount ?? 6);
+  const startMonthStr = months[0];
+  const startMonthDate = new Date(`${startMonthStr}-01T00:00:00Z`);
 
-  const [admissions, payments] = await Promise.all([
+  const [admissions, invoices] = await Promise.all([
     // Admissions grouped by month
     prisma.admission.groupBy({
       by: ["admitYm"],
@@ -125,15 +156,17 @@ export async function getDashboardCharts(monthsCount?: number) {
       _count: { id: true },
     }),
 
-    // Fee payments grouped by month
-    prisma.feePayment.groupBy({
-      by: ["paidYm"],
+    // Outstanding fees (invoices with status ISSUED) grouped by month of issueDate
+    prisma.feeInvoice.findMany({
       where: {
-        paidYm: { in: months },
-        status: "SUCCESS",
+        status: "ISSUED",
+        issueDate: { gte: startMonthDate }
       },
-      _sum: { amount: true },
-    }),
+      select: {
+        issueDate: true,
+        totalAmount: true
+      }
+    })
   ]);
 
   // Convert arrays to maps
@@ -141,18 +174,19 @@ export async function getDashboardCharts(monthsCount?: number) {
     admissions.map((a) => [a.admitYm, a._count.id])
   );
 
-  const paymentMap = Object.fromEntries(
-    payments.map((p) => [
-      p.paidYm,
-      Number(p._sum.amount || 0),
-    ])
-  );
+  const invoiceMap: Record<string, number> = {};
+  invoices.forEach(inv => {
+    const yyyy = inv.issueDate.getFullYear();
+    const mm = String(inv.issueDate.getMonth() + 1).padStart(2, '0');
+    const ym = `${yyyy}-${mm}`;
+    invoiceMap[ym] = (invoiceMap[ym] || 0) + inv.totalAmount;
+  });
 
   // Return structured result
   return months.map((month) => ({
     month,
     admissions: admissionMap[month] || 0,
-    feeCollected: paymentMap[month] || 0,
+    feeCollected: invoiceMap[month] || 0,
   }));
 }
 
@@ -160,11 +194,29 @@ export async function getDashboardCharts(monthsCount?: number) {
    ✅ Update Approval Request Status
 ============================================================ */
 export async function updateApprovalRequestStatus(id: number, status: "APPROVED" | "REJECTED") {
-  return prisma.approvalRequest.update({
+  const leaveReq = await prisma.leaveApprovalRequest.findUnique({
     where: { id },
-    data: {
-      status,
-      resolvedAt: new Date(),
-    },
   });
+  if (leaveReq) {
+    const updated = await prisma.leaveApprovalRequest.update({
+      where: { id },
+      data: { status },
+    });
+    await logAudit(`LEAVE_${status}`, "LeaveApprovalRequest", id, { requestType: leaveReq.requestType });
+    return updated;
+  }
+
+  const feeReq = await prisma.feeAdjustmentRequest.findUnique({
+    where: { id },
+  });
+  if (feeReq) {
+    const updated = await prisma.feeAdjustmentRequest.update({
+      where: { id },
+      data: { status },
+    });
+    await logAudit(`FEE_${status}`, "FeeAdjustmentRequest", id, { requestType: feeReq.requestType });
+    return updated;
+  }
+
+  throw new Error("Approval request not found");
 }
