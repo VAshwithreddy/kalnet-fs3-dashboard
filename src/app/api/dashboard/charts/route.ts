@@ -1,39 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
-import { dashboardChartsQuerySchema } from "@/lib/validators";
-import { badRequest, serverError } from "@/lib/errors";
 import { getDashboardCharts } from "@/services/dashboard.service";
-
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   try {
     const url = new URL(req.url);
+    const monthsParam = url.searchParams.get("months");
 
-    const parsed = dashboardChartsQuerySchema.safeParse({
-      months: url.searchParams.get("months") ?? undefined,
+    const months = monthsParam ? Number(monthsParam) : 6;
+
+    const data = await getDashboardCharts(months);
+
+    return NextResponse.json({
+      success: true,
+      data,
     });
-
-    if (!parsed.success) {
-      return badRequest(
-        "Invalid query params",
-        parsed.error.flatten()
-      );
-    }
-
-    const data = await getDashboardCharts(
-      parsed.data.months
+  } catch (error: any) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: {
+          message: error.message,
+        },
+      },
+      { status: 500 }
     );
-
-    return NextResponse.json(data);
-  } catch (error: unknown) {
-    if (error instanceof Error) {
-      return serverError(
-        "Failed to load dashboard charts",
-        error.message
-      );
-    }
-
-    return serverError("Failed to load dashboard charts");
   }
 }

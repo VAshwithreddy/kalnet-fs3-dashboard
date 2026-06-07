@@ -1,22 +1,23 @@
-import { prisma } from "@/lib/prisma";
-import { Prisma } from "@prisma/client";
+import { prisma } from "./prisma";
 
 export async function logAudit(
   action: string,
   entity: string,
   entityId: number,
-  meta?: Prisma.InputJsonValue
+  data: any,
+  performedBy?: number,
+  request?: Request
 ) {
-  try {
-    await prisma.auditLog.create({
-      data: {
-        action,
-        entity,
-        entityId,
-        meta: meta ? JSON.stringify(meta) : null,
-      },
-    });
-  } catch (error) {
-    console.error("Audit log failed:", error);
-  }
+  await prisma.auditLog.create({
+    data: {
+      action,
+      entity,
+      entityId,
+      performedBy: performedBy || 0,
+      oldValues: data?.old || null,
+      newValues: data?.new || null,
+      ipAddress: request?.headers.get("x-forwarded-for") || "",
+      userAgent: request?.headers.get("user-agent") || "",
+    },
+  });
 }

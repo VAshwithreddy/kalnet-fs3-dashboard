@@ -1,30 +1,20 @@
 import { z } from "zod";
 
-/* Dashboard Charts */
-export const dashboardChartsQuerySchema = z.object({
-  months: z
-    .string()
-    .regex(/^\d+$/)
-    .transform(Number)
-    .optional(),
+export const leaveSchema = z.object({
+  studentId: z.number(),
+  fromDate: z.string(),
+  toDate: z.string(),
+  reason: z.string().optional(),
 });
 
-/* Reports */
-export const reportsQuerySchema = z.object({
-  type: z.enum(["admissions", "payments", "issues", "activity"]),
-  startDate: z.string().optional(),
-  endDate: z.string().optional(),
+export const staffStatusSchema = z.object({
+  staffId: z.number(),
+  markedDate: z.string(),
+  status: z.enum(["ACTIVE", "INACTIVE", "ON_LEAVE"]),
 });
 
-/* Users */
-export const createUserSchema = z.object({
-  name: z.string().min(1),
-  email: z.string().email(),
-  role: z.enum(["ADMIN", "STAFF"]).optional(),
-});
-
-export const updateUserSchema = z.object({
-  name: z.string().optional(),
-  role: z.enum(["ADMIN", "STAFF", "TEACHER"]).optional(),
-  status: z.enum(["ACTIVE", "INACTIVE"]).optional(),
+export const feeCollectSchema = z.object({
+  invoiceId: z.number(),
+  amount: z.number().positive(),
+  method: z.string().optional(),
 });
