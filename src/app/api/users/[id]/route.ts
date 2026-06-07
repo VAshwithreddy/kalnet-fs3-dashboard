@@ -3,13 +3,18 @@ import { updateUserSchema } from "@/lib/validators";
 import { badRequest, serverError } from "@/lib/errors";
 import { updateUser } from "@/services/user.service";
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
-export async function PATCH(req: Request, context: any) {
+export async function PATCH(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const id = Number(context.params.id);
+    const { id: rawId } = await params;
+    const id = Number(rawId);
 
-    if (!id || isNaN(id)) {
+    if (!rawId || isNaN(id) || id <= 0) {
       return badRequest("Invalid user id");
     }
 
@@ -30,4 +35,4 @@ export async function PATCH(req: Request, context: any) {
 
     return serverError("Failed to update user");
   }
-}
+}

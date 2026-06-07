@@ -78,9 +78,25 @@ model Student {
   invoices    FeeInvoice[]
   payments    FeePayment[]
   leaves      LeaveRequest[]
+  attendance  StudentAttendance[]
 
   @@index([status])
   @@map("students")
+}
+
+model StudentAttendance {
+  id         Int      @id @default(autoincrement())
+  studentId  Int
+  markedDate DateTime
+  status     String   // "PRESENT", "ABSENT", "LATE"
+  markedAt   DateTime @default(now())
+  markedBy   Int?
+
+  student    Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, markedDate])
+  @@index([studentId, markedDate])
+  @@map("student_attendance")
 }
 
 model Admission {

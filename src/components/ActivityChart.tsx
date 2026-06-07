@@ -3,22 +3,58 @@
 import React, { useState, useEffect } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-const data = [
-  { name: 'Mon', active: 4000, new: 2400 },
-  { name: 'Tue', active: 3000, new: 1398 },
-  { name: 'Wed', active: 2000, new: 9800 },
-  { name: 'Thu', active: 2780, new: 3908 },
-  { name: 'Fri', active: 1890, new: 4800 },
-  { name: 'Sat', active: 2390, new: 3800 },
-  { name: 'Sun', active: 3490, new: 4300 },
-];
+interface ActivityItem {
+  name: string;
+  active: number;
+  new: number;
+}
 
 export function ActivityChart() {
+  const [chartData, setChartData] = useState<ActivityItem[]>([]);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
+    async function fetchActivity() {
+      try {
+        const res = await fetch("/api/reports?type=activity");
+        if (res.ok) {
+          const logs = await res.json();
+          const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+          const dayMap = Object.fromEntries(daysOfWeek.map(day => [day, { active: 0, new: 0 }]));
+
+          logs.forEach((log: { createdAt: string; action: string }) => {
+            const date = new Date(log.createdAt);
+            const dayIndex = date.getDay();
+            const dayName = daysOfWeek[(dayIndex + 6) % 7]; // Map Mon to 0, Sun to 6
+            dayMap[dayName].active += 1;
+
+            const actionLower = log.action.toLowerCase();
+            if (
+              actionLower.includes("create") || 
+              actionLower.includes("add") || 
+              actionLower.includes("update") || 
+              actionLower.includes("post") || 
+              actionLower.includes("migrate")
+            ) {
+              dayMap[dayName].new += 1;
+            }
+          });
+
+          const formatted = daysOfWeek.map(day => ({
+            name: day,
+            active: dayMap[day].active,
+            new: dayMap[day].new
+          }));
+
+          setChartData(formatted);
+        }
+      } catch (e) {
+        console.error("Failed to fetch activity chart:", e);
+      }
+    }
+    fetchActivity();
   }, []);
 
   return (
@@ -27,7 +63,7 @@ export function ActivityChart() {
       {mounted ? (
         <ResponsiveContainer width="100%" height="90%">
           <AreaChart
-            data={data}
+            data={chartData}
             margin={{
               top: 10,
               right: 10,

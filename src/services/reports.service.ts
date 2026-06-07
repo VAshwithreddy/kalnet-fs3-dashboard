@@ -20,10 +20,34 @@ export async function getReport(
       });
 
     case "approvals":
-      return prisma.approvalRequest.findMany({
-        where: { createdAt: { gte: from, lt: to } },
-        orderBy: { createdAt: "asc" },
-      });
+      return (async () => {
+        const [leaveApprovals, feeApprovals] = await Promise.all([
+          prisma.leaveApprovalRequest.findMany({
+            where: { createdAt: { gte: from, lt: to } },
+            orderBy: { createdAt: "asc" },
+          }),
+          prisma.feeAdjustmentRequest.findMany({
+            where: { createdAt: { gte: from, lt: to } },
+            orderBy: { createdAt: "asc" },
+          }),
+        ]);
+        return [
+          ...leaveApprovals.map((a) => ({
+            id: a.id,
+            type: a.requestType,
+            status: a.status,
+            createdAt: a.createdAt,
+            resolvedAt: a.status !== "PENDING" ? a.updatedAt : null,
+          })),
+          ...feeApprovals.map((a) => ({
+            id: a.id,
+            type: a.requestType,
+            status: a.status,
+            createdAt: a.createdAt,
+            resolvedAt: a.status !== "PENDING" ? a.updatedAt : null,
+          })),
+        ].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+      })();
 
     case "leave":
       return prisma.leaveRequest.findMany({

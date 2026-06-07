@@ -1,13 +1,13 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { UserPlus, Edit2, ShieldAlert, AlertCircle, Users } from "lucide-react";
+import { Edit2, ShieldAlert, AlertCircle, Users } from "lucide-react";
 import { TableSkeleton } from "@/components/Skeletons";
 import { EmptyState } from "@/components/EmptyState";
 import { ConfirmationModal } from "@/components/ConfirmationModal";
 import { toast } from "sonner";
 
-type Role = "ADMIN" | "TEACHER" | "STUDENT" | "STAFF";
+type Role = "ADMIN" | "TEACHER" | "STAFF";
 
 type User = {
   id: string;
@@ -32,7 +32,8 @@ export default function UsersPage() {
     userName: string;
   } | null>(null);
 
-  async function fetchUsers() {
+  async function fetchUsers(isSilent = false) {
+    if (!isSilent) setLoading(true);
     try {
       const res = await fetch("/api/users");
       if (res.ok) {
@@ -44,22 +45,25 @@ export default function UsersPage() {
           email: u.email,
           role: u.role,
           isActive: u.status === "ACTIVE",
-          lastLogin: "Just now" // Mock for now since API doesn't have it
+          lastLogin: "Just now" // Mock for now since API doesn't track last login
         })));
       } else {
-        setError("Failed to fetch users list.");
+        if (!isSilent) setError("Failed to fetch users list.");
       }
     } catch (e) {
       console.error("Failed to fetch users", e);
-      setError("A network or server error occurred.");
+      if (!isSilent) setError("A network or server error occurred.");
     } finally {
-      setLoading(false);
+      if (!isSilent) setLoading(false);
     }
   }
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchUsers();
+    // Poll every 5 seconds to pick up changes from Prisma Studio
+    const interval = setInterval(() => fetchUsers(true), 5000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleOpenConfirmStatus = (id: string, name: string, currentActive: boolean) => {
@@ -82,33 +86,50 @@ export default function UsersPage() {
     });
   };
 
-  const handleConfirmAction = () => {
+  const handleConfirmAction = async () => {
     if (!confirmModal) return;
     const { userId, actionType, nextValue, userName } = confirmModal;
     setConfirmModal(null);
 
+    // Optimistic update
     if (actionType === "toggleStatus") {
       setUsers(users.map(u => u.id === userId ? { ...u, isActive: nextValue as boolean } : u));
-      toast.success(`${userName}'s account has been ${nextValue ? "enabled" : "disabled"} successfully.`);
     } else if (actionType === "changeRole") {
       setUsers(users.map(u => u.id === userId ? { ...u, role: nextValue as Role } : u));
-      toast.success(`Role for ${userName} updated to ${String(nextValue).toLowerCase()} successfully.`);
+    }
+
+    // Persist to database via PATCH /api/users/[id]
+    try {
+      const patchBody = actionType === "toggleStatus"
+        ? { status: nextValue ? "ACTIVE" : "INACTIVE" }
+        : { role: nextValue as Role };
+
+      const res = await fetch(`/api/users/${userId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(patchBody)
+      });
+
+      if (res.ok) {
+        if (actionType === "toggleStatus") {
+          toast.success(`${userName}'s account has been ${nextValue ? "enabled" : "disabled"} successfully.`);
+        } else {
+          toast.success(`Role for ${userName} updated to ${String(nextValue).toLowerCase()} successfully.`);
+        }
+        // Re-fetch to ensure DB sync
+        fetchUsers(true);
+      } else {
+        const errData = await res.json();
+        throw new Error(errData.error || "Failed to update user");
+      }
+    } catch (e: unknown) {
+      // Roll back optimistic update
+      fetchUsers(true);
+      toast.error(e instanceof Error ? e.message : "Failed to save changes to database.");
     }
   };
 
-  const handleAddUserDemo = () => {
-    // Demonstration action: add a mock user
-    const newUser: User = {
-      id: String(Date.now()),
-      name: "New Teacher",
-      email: "new.teacher@omninode.com",
-      role: "TEACHER",
-      isActive: true,
-      lastLogin: "Never"
-    };
-    setUsers([...users, newUser]);
-    toast.success("Demonstration user added successfully!");
-  };
+  // handleAddUserDemo removed since unused
 
   if (error) {
     return (
@@ -135,13 +156,7 @@ export default function UsersPage() {
           <h1 className="text-3xl font-bold text-text-heading tracking-tight">User Management</h1>
           <p className="text-text-secondary mt-2">Manage roles, status, and system access.</p>
         </div>
-        <button 
-          onClick={handleAddUserDemo}
-          className="flex items-center px-4 py-2 bg-primary text-text-on-primary rounded-lg shadow-shadow-btn hover:bg-primary-mid transition-all font-medium cursor-pointer"
-        >
-          <UserPlus className="w-4 h-4 mr-2" />
-          Add User
-        </button>
+        {/* Add User button removed */}
       </div>
 
       <div className="bg-bg-card border border-border shadow-shadow-card rounded-2xl overflow-hidden p-6">
@@ -152,8 +167,6 @@ export default function UsersPage() {
             icon={Users}
             title="No users yet"
             description="Add your first user to start managing systems, permissions, and dashboards."
-            actionLabel="Add User"
-            onAction={handleAddUserDemo}
           />
         ) : (
           <div className="overflow-x-auto animate-in fade-in duration-300">
@@ -183,7 +196,6 @@ export default function UsersPage() {
                         <option value="ADMIN">Admin</option>
                         <option value="TEACHER">Teacher</option>
                         <option value="STAFF">Staff</option>
-                        <option value="STUDENT">Student</option>
                       </select>
                     </td>
                     <td className="px-6 py-4 text-sm text-text-secondary">{user.lastLogin}</td>

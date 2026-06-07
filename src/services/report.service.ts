@@ -2,7 +2,7 @@
 import { prisma } from "@/lib/prisma";
 
 export async function getReports(
-  type: "admissions" | "payments",
+  type: "admissions" | "payments" | "issues" | "activity",
   startDate?: string,
   endDate?: string
 ) {
@@ -16,6 +16,27 @@ export async function getReports(
       where: { admittedAt: dateFilter },
       include: { student: true },
       orderBy: { admittedAt: "desc" },
+    });
+  }
+
+  if (type === "issues") {
+    return prisma.auditLog.findMany({
+      where: {
+        action: "ISSUE_REPORTED",
+        createdAt: dateFilter,
+      },
+      orderBy: { createdAt: "desc" },
+    });
+  }
+
+  if (type === "activity") {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    return prisma.auditLog.findMany({
+      where: {
+        createdAt: { gte: sevenDaysAgo }
+      },
+      orderBy: { createdAt: "asc" }
     });
   }
 

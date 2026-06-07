@@ -5,6 +5,7 @@ import { CopySlash, LayoutDashboard, Users, Settings, Activity, FileText, ArrowL
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { toast } from "sonner";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -22,6 +23,38 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   };
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isActionsOpen, setIsActionsOpen] = useState(false);
+  const [issueText, setIssueText] = useState("");
+  const [issueType, setIssueType] = useState("Bug / Technical Issue");
+  const [isSubmittingIssue, setIsSubmittingIssue] = useState(false);
+
+  const handleSubmitIssue = async () => {
+    if (!issueText.trim()) return;
+    setIsSubmittingIssue(true);
+    try {
+      const res = await fetch("/api/reports", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          description: issueText,
+          reporterName: user?.name || "Super Admin",
+          issueType
+        })
+      });
+      if (res.ok) {
+        toast.success("Issue reported successfully!");
+        setIssueText("");
+        setIssueType("Bug / Technical Issue");
+        setIsReportModalOpen(false);
+      } else {
+        toast.error("Failed to submit issue report.");
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error("A network error occurred.");
+    } finally {
+      setIsSubmittingIssue(false);
+    }
+  };
 
   const handleExportData = async () => {
     try {
@@ -218,26 +251,52 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="bg-bg-card p-6 rounded-2xl shadow-shadow-elevated w-full max-w-md border border-border animate-in fade-in zoom-in duration-200">
             <h3 className="text-xl font-semibold text-text-heading mb-2">Report an Issue</h3>
             <p className="text-sm text-text-secondary mb-4">Our support team will look into this as soon as possible.</p>
+            
+            <div className="mb-4">
+              <label className="block text-xs font-semibold text-text-heading uppercase tracking-wider mb-2">Issue Type</label>
+              <select
+                value={issueType}
+                onChange={(e) => setIssueType(e.target.value)}
+                disabled={isSubmittingIssue}
+                className="w-full bg-bg-app border border-border rounded-lg px-4 py-2.5 text-text-heading focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/50 text-sm cursor-pointer [&>option]:bg-bg-card"
+              >
+                <option value="Bug / Technical Issue">Bug / Technical Issue</option>
+                <option value="Feature Request">Feature Request</option>
+                <option value="Feedback / Suggestions">Feedback / Suggestions</option>
+                <option value="Billing / Payment Issue">Billing / Payment Issue</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div className="mb-2">
+              <label className="block text-xs font-semibold text-text-heading uppercase tracking-wider">Description</label>
+            </div>
             <textarea 
+              value={issueText}
+              onChange={(e) => setIssueText(e.target.value)}
               className="w-full h-32 p-3 bg-bg-app border border-border rounded-lg text-text-heading focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/50 resize-none mb-4"
               placeholder="Please describe the issue in detail..."
               autoFocus
+              disabled={isSubmittingIssue}
             ></textarea>
             <div className="flex justify-end space-x-3">
               <button 
-                onClick={() => setIsReportModalOpen(false)} 
-                className="px-4 py-2 text-sm font-medium text-text-secondary hover:text-text-heading transition-colors"
+                onClick={() => {
+                  setIssueText("");
+                  setIssueType("Bug / Technical Issue");
+                  setIsReportModalOpen(false);
+                }} 
+                disabled={isSubmittingIssue}
+                className="px-4 py-2 text-sm font-medium text-text-secondary hover:text-text-heading transition-colors disabled:opacity-50"
               >
                 Cancel
               </button>
               <button 
-                onClick={() => {
-                  alert("Report submitted successfully! Thank you for your feedback.");
-                  setIsReportModalOpen(false);
-                }} 
-                className="px-4 py-2 text-sm font-medium bg-primary text-text-on-primary rounded-lg shadow-shadow-btn hover:bg-primary-mid transition-all"
+                onClick={handleSubmitIssue} 
+                disabled={isSubmittingIssue || !issueText.trim()}
+                className="px-4 py-2 text-sm font-medium bg-primary text-text-on-primary rounded-lg shadow-shadow-btn hover:bg-primary-mid transition-all disabled:opacity-50 flex items-center gap-1.5"
               >
-                Submit Report
+                {isSubmittingIssue ? "Submitting..." : "Submit Report"}
               </button>
             </div>
           </div>

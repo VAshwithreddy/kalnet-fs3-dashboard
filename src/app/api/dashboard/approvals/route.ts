@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { updateApprovalRequestStatus } from "@/services/dashboard.service";
 import { serverError } from "@/lib/errors";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 export async function PATCH(request: Request) {
   try {
     const body = await request.json();

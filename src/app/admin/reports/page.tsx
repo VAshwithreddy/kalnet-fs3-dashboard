@@ -12,16 +12,62 @@ const initialReports = [
 ];
 
 export default function ReportsPage() {
-  const [data] = useState(initialReports);
+  const [data, setData] = useState(initialReports);
   const [filterType, setFilterType] = useState("All");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [search, setSearch] = useState("");
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
 
+  React.useEffect(() => {
+    async function fetchDbIssues() {
+      try {
+        const res = await fetch("/api/reports?type=issues");
+        if (res.ok) {
+          const dbIssues = await res.json();
+          const mappedIssues = dbIssues.map((issue: { id: number; createdAt: string; changeDetails: string; meta: string | null }) => {
+            let reporter = "Super Admin";
+            let issueTypeLabel = "";
+            try {
+              if (issue.meta) {
+                const parsed = JSON.parse(issue.meta);
+                if (parsed.reporterName) reporter = parsed.reporterName;
+                if (parsed.issueType) issueTypeLabel = parsed.issueType;
+              }
+            } catch {
+              // Ignore parse error
+            }
+            return {
+              id: `REP-ISS-${String(issue.id).padStart(3, '0')}`,
+              date: new Date(issue.createdAt).toISOString().split('T')[0],
+              type: issueTypeLabel ? `System Issue (${issueTypeLabel})` : "System Issue",
+              student: reporter,
+              status: "Completed",
+              amount: 0,
+              description: issue.changeDetails
+            };
+          });
+          setData((prevData) => {
+            const staticData = prevData.filter(item => !item.id.startsWith("REP-ISS-"));
+            return [...staticData, ...mappedIssues];
+          });
+        }
+      } catch (e) {
+        console.error("Failed to fetch reported issues:", e);
+      }
+    }
+    fetchDbIssues();
+  }, []);
+
   const filteredData = data.filter((item) => {
     let match = true;
-    if (filterType !== "All" && item.type !== filterType) match = false;
+    if (filterType !== "All") {
+      if (filterType === "System Issue") {
+        if (!item.type.startsWith("System Issue")) match = false;
+      } else {
+        if (item.type !== filterType) match = false;
+      }
+    }
     if (startDate && new Date(item.date) < new Date(startDate)) match = false;
     if (endDate && new Date(item.date) > new Date(endDate)) match = false;
     if (search && !item.student.toLowerCase().includes(search.toLowerCase()) && !item.id.toLowerCase().includes(search.toLowerCase())) match = false;
@@ -113,6 +159,7 @@ export default function ReportsPage() {
                 <option value="Admission">Admission</option>
                 <option value="Fee Payment">Fee Payment</option>
                 <option value="Leave Request">Leave Request</option>
+                <option value="System Issue">System Issue</option>
               </select>
             </div>
           </div>

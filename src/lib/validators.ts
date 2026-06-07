@@ -11,7 +11,7 @@ export const dashboardChartsQuerySchema = z.object({
 
 /* Reports */
 export const reportsQuerySchema = z.object({
-  type: z.enum(["admissions", "payments"]),
+  type: z.enum(["admissions", "payments", "issues", "activity"]),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
 });
@@ -25,6 +25,6 @@ export const createUserSchema = z.object({
 
 export const updateUserSchema = z.object({
   name: z.string().optional(),
-  role: z.enum(["ADMIN", "STAFF"]).optional(),
+  role: z.enum(["ADMIN", "STAFF", "TEACHER"]).optional(),
   status: z.enum(["ACTIVE", "INACTIVE"]).optional(),
 });

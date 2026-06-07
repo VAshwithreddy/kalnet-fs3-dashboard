@@ -7,7 +7,7 @@ import {
   GraduationCap, 
   UserCheck, 
   BadgeDollarSign, 
-  UserPlus, 
+  UserPlus,
   CalendarOff, 
   ClipboardCheck,
   Check,
@@ -43,12 +43,20 @@ interface DashboardStats {
   newAdmissionsThisMonth: number;
   feesCollectedThisMonth: number;
   leavePending: number;
+  totalStaff: number;
   latestApprovals?: Approval[];
   latestAdmissions?: Admission[];
 }
 
+interface ChartItem {
+  month: string;
+  admissions: number;
+  feeCollected: number;
+}
+
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [chartData, setChartData] = useState<ChartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [processingId, setProcessingId] = useState<number | null>(null);
@@ -61,20 +69,26 @@ export default function DashboardPage() {
     approvalType: string;
   } | null>(null);
 
-  async function fetchStats() {
+  async function fetchStats(isSilent = false) {
+    if (!isSilent) setLoading(true);
     try {
-      const res = await fetch("/api/dashboard/stats");
-      if (res.ok) {
-        const data = await res.json();
-        setStats(data);
+      const [statsRes, chartRes] = await Promise.all([
+        fetch("/api/dashboard/stats"),
+        fetch("/api/dashboard/charts?months=7")
+      ]);
+      if (statsRes.ok && chartRes.ok) {
+        const statsData = await statsRes.json();
+        const chartDataList = await chartRes.json();
+        setStats(statsData);
+        setChartData(chartDataList);
       } else {
-        setError("Failed to load dashboard data.");
+        if (!isSilent) setError("Failed to load dashboard data.");
       }
     } catch (e) {
       console.error("Failed to fetch dashboard stats", e);
-      setError("Network or server error occurred.");
+      if (!isSilent) setError("Network or server error occurred.");
     } finally {
-      setLoading(false);
+      if (!isSilent) setLoading(false);
     }
   }
 
@@ -117,6 +131,11 @@ export default function DashboardPage() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchStats();
+    // Poll every 5 seconds to pick up changes from Prisma Studio or other sources
+    const interval = setInterval(() => {
+      fetchStats(true);
+    }, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   if (error) {
@@ -170,13 +189,61 @@ export default function DashboardPage() {
     );
   }
 
+  const getStudentsTrend = () => {
+    if (!stats || chartData.length === 0) return [1000, 1020, 1015, 1030, 1045, 1060, 1080];
+    const admissionsTrend = chartData.map(d => d.admissions);
+    const trend = new Array(admissionsTrend.length);
+    let current = stats.studentsEnrolled;
+    for (let i = admissionsTrend.length - 1; i >= 0; i--) {
+      trend[i] = current;
+      current -= admissionsTrend[i];
+    }
+    return trend;
+  };
+
+  const getFeesTrend = () => {
+    if (chartData.length === 0) return [5000, 4800, 4500, 4200, 4000, 3800, 3500];
+    return chartData.map(d => d.feeCollected);
+  };
+
+  const getAdmissionsTrend = () => {
+    if (chartData.length === 0) return [10, 15, 12, 20, 25, 30, 35];
+    return chartData.map(d => d.admissions);
+  };
+
+  const getLeaveTrend = () => {
+    const current = stats?.leavePending ?? 0;
+    return [
+      Math.max(0, current - 2),
+      Math.max(0, current - 1),
+      Math.max(0, current - 3),
+      Math.max(0, current + 1),
+      Math.max(0, current),
+      Math.max(0, current - 1),
+      current
+    ];
+  };
+
+  const getApprovalsTrend = () => {
+    const current = stats?.approvalsPending ?? 0;
+    return [
+      Math.max(0, current + 4),
+      Math.max(0, current + 2),
+      Math.max(0, current + 3),
+      Math.max(0, current + 1),
+      Math.max(0, current + 2),
+      Math.max(0, current - 1),
+      current
+    ];
+  };
+
   const metrics = [
-    { title: "Total Students", value: stats ? stats.studentsEnrolled?.toLocaleString() : "-", trend: "+5.2%", trendUp: true, icon: GraduationCap, sparklineData: [1000, 1020, 1015, 1030, 1045, 1060, 1080] },
-    { title: "Active Staff", value: "124", trend: "0%", trendUp: true, icon: UserCheck, sparklineData: [120, 120, 121, 122, 124, 124, 124] }, 
-    { title: "Pending Fees", value: stats ? `$${stats.outstandingFees?.toLocaleString()}` : "-", trend: "-12.5%", trendUp: true, icon: BadgeDollarSign, sparklineData: [5000, 4800, 4500, 4200, 4000, 3800, 3500] },
-    { title: "New Admissions", value: stats ? stats.newAdmissionsThisMonth?.toLocaleString() : "-", trend: "+14.0%", trendUp: true, icon: UserPlus, sparklineData: [10, 15, 12, 20, 25, 30, 35] },
-    { title: "Leave Requests", value: stats ? stats.leavePending?.toString() : "-", trend: "+2", trendUp: false, icon: CalendarOff, sparklineData: [2, 3, 2, 4, 5, 3, 6] },
-    { title: "Pending Approvals", value: stats ? stats.approvalsPending?.toString() : "-", trend: "-4", trendUp: true, icon: ClipboardCheck, sparklineData: [20, 18, 15, 12, 10, 8, 6] },
+    { title: "Total Students", value: stats ? stats.studentsEnrolled?.toLocaleString() : "-", trend: "+5.2%", trendUp: true, icon: GraduationCap, sparklineData: getStudentsTrend() },
+    { title: "Active Staff", value: stats ? stats.totalStaff?.toLocaleString() : "-", trend: "0%", trendUp: true, icon: UserCheck, sparklineData: [stats?.totalStaff ?? 0, stats?.totalStaff ?? 0, stats?.totalStaff ?? 0, stats?.totalStaff ?? 0, stats?.totalStaff ?? 0, stats?.totalStaff ?? 0, stats?.totalStaff ?? 0] },
+    { title: "Pending Fees", value: stats ? `$${stats.outstandingFees?.toLocaleString()}` : "-", trend: "-12.5%", trendUp: true, icon: BadgeDollarSign, sparklineData: getFeesTrend() },
+    { title: "New Admissions", value: stats ? stats.newAdmissionsThisMonth?.toLocaleString() : "-", trend: "+14.0%", trendUp: true, icon: UserPlus, sparklineData: getAdmissionsTrend() },
+    { title: "Leave Requests", value: stats ? stats.leavePending?.toString() : "-", trend: "+2", trendUp: false, icon: CalendarOff, sparklineData: getLeaveTrend() },
+    { title: "Pending Approvals", value: stats ? stats.approvalsPending?.toString() : "-", trend: "-4", trendUp: true, icon: ClipboardCheck, sparklineData: getApprovalsTrend() },
   ];
 
   return (
@@ -202,31 +269,11 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-        <div className="lg:col-span-2">
-          <TrendChart />
-        </div>
-        
-        <div className="bg-bg-card border border-border shadow-shadow-card p-6 rounded-2xl mt-6 h-80 flex flex-col transition-all duration-300 hover:-translate-y-1 hover:shadow-shadow-elevated hover:bg-bg-card-hover">
-          <div className="text-text-heading font-semibold mb-4">Announcements</div>
-          <div className="flex-1 overflow-y-auto space-y-4 pr-2">
-            <div className="p-3 bg-primary-ghost border border-primary-pale rounded-xl">
-              <div className="text-sm font-medium text-text-heading mb-1">Staff Meeting Reminder</div>
-              <div className="text-xs text-text-secondary">All teachers must attend the assembly hall at 3:00 PM today.</div>
-            </div>
-            <div className="p-3 bg-bg-app border border-border rounded-xl">
-              <div className="text-sm font-medium text-text-heading mb-1">Q3 Fee Deadline</div>
-              <div className="text-xs text-text-secondary">Please send a reminder out to parents regarding the upcoming fee deadline.</div>
-            </div>
-            <div className="p-3 bg-bg-app border border-border rounded-xl">
-              <div className="text-sm font-medium text-text-heading mb-1">New Curriculum Guidelines</div>
-              <div className="text-xs text-text-secondary">The state has issued new curriculum guidelines. Review in the portal.</div>
-            </div>
-          </div>
-        </div>
+      <div className="mt-6">
+        <TrendChart />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+      <div className="mt-6">
         <div className="bg-bg-card border border-border shadow-shadow-card p-6 rounded-2xl transition-all duration-300 hover:-translate-y-1 hover:shadow-shadow-elevated hover:bg-bg-card-hover">
           <div className="text-text-heading font-semibold mb-4">Latest Approvals</div>
           <div className="overflow-x-auto">
@@ -282,35 +329,6 @@ export default function DashboardPage() {
                 {!stats?.latestApprovals?.length && (
                   <tr>
                     <td colSpan={4} className="py-4 text-center text-text-secondary">No recent approvals</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div className="bg-bg-card border border-border shadow-shadow-card p-6 rounded-2xl transition-all duration-300 hover:-translate-y-1 hover:shadow-shadow-elevated hover:bg-bg-card-hover">
-          <div className="text-text-heading font-semibold mb-4">Latest Admissions</div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="border-b border-border text-sm text-text-secondary">
-                  <th className="pb-3 font-medium">Admission No</th>
-                  <th className="pb-3 font-medium">Name</th>
-                  <th className="pb-3 font-medium">Date</th>
-                </tr>
-              </thead>
-              <tbody className="text-sm">
-                {stats?.latestAdmissions?.map((item) => (
-                  <tr key={item.id} className="border-b border-border/50 last:border-0 hover:bg-bg-app">
-                    <td className="py-3 text-text-heading">{item.student?.admissionNo || '-'}</td>
-                    <td className="py-3 text-text-heading">{item.student?.firstName} {item.student?.lastName}</td>
-                    <td className="py-3 text-text-secondary">{new Date(item.admittedAt).toLocaleDateString()}</td>
-                  </tr>
-                ))}
-                {!stats?.latestAdmissions?.length && (
-                  <tr>
-                    <td colSpan={3} className="py-4 text-center text-text-secondary">No recent admissions</td>
                   </tr>
                 )}
               </tbody>
