@@ -76,7 +76,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.setAttribute("href", url);
-      link.setAttribute("download", `omninode_dashboard_summary_${new Date().toISOString().split('T')[0]}.csv`);
+      link.setAttribute("download", `narayana_dashboard_summary_${new Date().toISOString().split('T')[0]}.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -126,7 +126,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <aside className={`${isCollapsed ? 'w-20' : 'w-64'} bg-sidebar/95 backdrop-blur-md border-r border-border flex flex-col fixed h-full z-40 shadow-[4px_0_24px_rgba(15,23,42,0.08)] transition-all duration-300`}>
         <Link href="/admin/dashboard" className={`h-16 flex items-center ${isCollapsed ? 'justify-center px-0' : 'px-6'} border-b border-border transition-all duration-300 hover:bg-bg-card-hover group`}>
           <CopySlash className="text-primary w-8 h-8 font-bold flex-shrink-0 group-hover:scale-105 transition-transform" />
-          {!isCollapsed && <span className="ml-3 text-xl font-bold text-text-heading tracking-wider whitespace-nowrap">OMNI<span className="text-primary font-light">NODE</span></span>}
+          {!isCollapsed && <span className="ml-3 text-xl font-bold text-text-heading tracking-wider whitespace-nowrap">NARA<span className="text-primary font-light">YANA</span></span>}
         </Link>
         <div className="flex-1 overflow-y-auto py-6 px-4 space-y-2">
           {navItems.map((item) => {
@@ -159,7 +159,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             {!isCollapsed && (
               <div className="ml-3 overflow-hidden">
                 <div className="text-sm font-medium text-text-heading whitespace-nowrap">{user?.name || "Admin User"}</div>
-                <div className="text-xs text-text-muted whitespace-nowrap overflow-hidden text-ellipsis">{user?.email || "admin@omninode.com"}</div>
+                <div className="text-xs text-text-muted whitespace-nowrap overflow-hidden text-ellipsis">{user?.email || "admin@narayana.com"}</div>
                 <button 
                   onClick={() => {
                     logout();

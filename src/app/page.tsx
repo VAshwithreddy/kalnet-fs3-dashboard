@@ -145,7 +145,7 @@ export default function Home() {
           </div>
         </div>
         <h1 className="text-3xl font-bold tracking-tight text-center mb-2 text-text-heading">
-          OMNI<span className="text-primary font-light">NODE</span>
+          NARA<span className="text-primary font-light">YANA</span>
         </h1>
         <p className="text-text-secondary text-sm text-center mb-6">Enter your credentials to access the portal.</p>
 
