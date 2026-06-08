@@ -18,3 +18,13 @@ export const feeCollectSchema = z.object({
   amount: z.number().positive(),
   method: z.string().optional(),
 });
+
+export const createUserSchema = z.object({
+  email: z.string().email(),
+  name: z.string().min(1),
+  role: z.enum(["ADMIN", "STAFF", "TEACHER"]).optional(),
+  status: z.string().optional(),
+  department: z.string().optional().nullable(),
+});
+
+export const updateUserSchema = createUserSchema.partial();

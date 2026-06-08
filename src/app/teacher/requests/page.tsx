@@ -47,7 +47,10 @@ export default function MyRequestsPage() {
     try {
       const res = await fetch("/api/teacher/requests");
       if (res.ok) {
-        const data = await res.json();
+        const resData = await res.json();
+        const data = Array.isArray(resData)
+          ? resData
+          : (resData && resData.success && Array.isArray(resData.data) ? resData.data : []);
         setRequests(data || []);
       } else {
         setError("Failed to fetch your requests.");

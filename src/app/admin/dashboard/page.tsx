@@ -78,7 +78,10 @@ export default function DashboardPage() {
       ]);
       if (statsRes.ok && chartRes.ok) {
         const statsData = await statsRes.json();
-        const chartDataList = await chartRes.json();
+        const chartResData = await chartRes.json();
+        const chartDataList = Array.isArray(chartResData)
+          ? chartResData
+          : (chartResData && chartResData.success && Array.isArray(chartResData.data) ? chartResData.data : []);
         setStats(statsData);
         setChartData(chartDataList);
       } else {
