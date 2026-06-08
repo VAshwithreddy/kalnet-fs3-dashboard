@@ -1,12 +1,15 @@
 import { prisma } from "@/lib/prisma";
 import { successResponse } from "@/lib/api-response";
 
+import { NextRequest } from "next/server";
+
 export async function GET(
-  request: Request,
-  { params }: { params: { studentId: string } }
+  request: NextRequest,
+  context: { params: Promise<{ studentId: string }> }
 ) {
+  const { studentId } = await context.params;
   const invoices = await prisma.feeInvoice.findMany({
-    where: { studentId: Number(params.studentId) },
+    where: { studentId: Number(studentId) },
   });
 
   return successResponse(invoices);

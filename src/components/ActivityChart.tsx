@@ -20,7 +20,11 @@ export function ActivityChart() {
       try {
         const res = await fetch("/api/reports?type=activity");
         if (res.ok) {
-          const logs = await res.json();
+          const resData = await res.json();
+          const logs = Array.isArray(resData)
+            ? resData
+            : (resData && resData.success && Array.isArray(resData.data) ? resData.data : []);
+
           const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
           const dayMap = Object.fromEntries(daysOfWeek.map(day => [day, { active: 0, new: 0 }]));
 

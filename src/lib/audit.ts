@@ -4,7 +4,7 @@ export async function logAudit(
   action: string,
   entity: string,
   entityId: number,
-  data: any,
+  data?: any,
   performedBy?: number,
   request?: Request
 ) {
@@ -14,8 +14,8 @@ export async function logAudit(
       entity,
       entityId,
       performedBy: performedBy || 0,
-      oldValues: data?.old || null,
-      newValues: data?.new || null,
+      changeDetails: data ? (typeof data === "string" ? data : JSON.stringify(data)) : null,
+      meta: data ? JSON.stringify(data) : null,
       ipAddress: request?.headers.get("x-forwarded-for") || "",
       userAgent: request?.headers.get("user-agent") || "",
     },
