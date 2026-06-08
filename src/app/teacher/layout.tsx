@@ -59,7 +59,7 @@ export default function TeacherLayout({ children }: { children: React.ReactNode 
       <aside className={`${isCollapsed ? 'w-20' : 'w-64'} bg-sidebar/95 backdrop-blur-md border-r border-border flex flex-col fixed h-full z-45 shadow-[4px_0_24px_rgba(15,23,42,0.08)] transition-all duration-300`}>
         <Link href="/teacher/dashboard" className={`h-16 flex items-center ${isCollapsed ? 'justify-center px-0' : 'px-6'} border-b border-border transition-all duration-300 hover:bg-bg-card-hover group`}>
           <CopySlash className="text-primary w-8 h-8 font-bold flex-shrink-0 group-hover:scale-105 transition-transform" />
-          {!isCollapsed && <span className="ml-3 text-xl font-bold text-text-heading tracking-wider whitespace-nowrap">OMNI<span className="text-primary font-light">NODE</span></span>}
+          {!isCollapsed && <span className="ml-3 text-xl font-bold text-text-heading tracking-wider whitespace-nowrap">NARA<span className="text-primary font-light">YANA</span></span>}
         </Link>
         <div className="flex-1 overflow-y-auto py-6 px-4 space-y-2">
           {navItems.map((item) => {

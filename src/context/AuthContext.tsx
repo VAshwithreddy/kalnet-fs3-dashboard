@@ -24,8 +24,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const savedRole = localStorage.getItem("omninode_role") as Role;
-    const savedUser = localStorage.getItem("omninode_user");
+    const savedRole = localStorage.getItem("narayana_role") as Role;
+    const savedUser = localStorage.getItem("narayana_user");
     if (savedRole) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setRole(savedRole);
@@ -43,15 +43,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = (newRole: Role, profile: UserProfile) => {
     setRole(newRole);
     setUser(profile);
-    if (newRole) localStorage.setItem("omninode_role", newRole);
-    localStorage.setItem("omninode_user", JSON.stringify(profile));
+    if (newRole) localStorage.setItem("narayana_role", newRole);
+    localStorage.setItem("narayana_user", JSON.stringify(profile));
   };
 
   const logout = () => {
     setRole(null);
     setUser(null);
-    localStorage.removeItem("omninode_role");
-    localStorage.removeItem("omninode_user");
+    localStorage.removeItem("narayana_role");
+    localStorage.removeItem("narayana_user");
   };
 
   if (!mounted) return null;

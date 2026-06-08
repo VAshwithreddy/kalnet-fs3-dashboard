@@ -5,7 +5,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
-  title: "OmniNode School Dashboard",
+  title: "Narayana School Dashboard",
   description: "School Administration Platform",
 };
 

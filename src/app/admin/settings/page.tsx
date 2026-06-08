@@ -9,7 +9,7 @@ export default function SettingsPage() {
   // Profile State
   const [firstName, setFirstName] = useState("Admin");
   const [lastName, setLastName] = useState("User");
-  const [email, setEmail] = useState("admin@omninode.com");
+  const [email, setEmail] = useState("admin@narayana.com");
   const [bio, setBio] = useState("System administrator.");
 
   // Security State
