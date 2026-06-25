@@ -1,16 +1,41 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Save, Bell, Shield, User as UserIcon, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { toast } from "sonner";
 
 export default function SettingsPage() {
+  const { user, login } = useAuth();
   const [activeTab, setActiveTab] = useState("profile");
 
   // Profile State
-  const [firstName, setFirstName] = useState("Admin");
-  const [lastName, setLastName] = useState("User");
-  const [email, setEmail] = useState("admin@narayana.com");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
   const [bio, setBio] = useState("System administrator.");
+
+  // Fetch settings on mount
+  useEffect(() => {
+    async function loadSettings() {
+      try {
+        const currentEmail = user?.email || "admin@kalnet.edu";
+        const res = await fetch(`/api/settings?email=${encodeURIComponent(currentEmail)}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.user) {
+            const nameParts = data.user.name.split(" ");
+            setFirstName(nameParts[0] || "");
+            setLastName(nameParts.slice(1).join(" ") || "");
+            setEmail(data.user.email);
+          }
+        }
+      } catch (e) {
+        console.error("Failed to load settings", e);
+      }
+    }
+    loadSettings();
+  }, [user?.email]);
 
   // Security State
   const [currentPassword, setCurrentPassword] = useState("");
@@ -43,20 +68,39 @@ export default function SettingsPage() {
   };
 
   const handleSaveProfile = async () => {
+    if (!firstName.trim() || !email.trim()) {
+      showNotification("error", "First Name and Email are required.");
+      return;
+    }
+    
     setIsSaving(true);
     try {
+      const currentEmail = user?.email || "admin@kalnet.edu";
       const res = await fetch("/api/settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "profile", firstName, lastName, email, bio })
+        body: JSON.stringify({
+          type: "profile",
+          currentEmail,
+          firstName,
+          lastName,
+          email,
+          bio
+        })
       });
       
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to save profile");
       
+      // Update session locally so layout updates instantly
+      const fullName = `${firstName} ${lastName}`.trim();
+      login("ADMIN", { name: fullName, email });
+
       showNotification("success", "Profile information updated successfully.");
+      toast.success("Profile updated successfully!");
     } catch (e: unknown) {
       showNotification("error", e instanceof Error ? e.message : "An error occurred");
+      toast.error(e instanceof Error ? e.message : "An error occurred");
     } finally {
       setIsSaving(false);
     }
@@ -65,34 +109,47 @@ export default function SettingsPage() {
   const handleUpdatePassword = async () => {
     if (!currentPassword) {
       showNotification("error", "Please enter your current password.");
+      toast.error("Please enter your current password.");
       return;
     }
     if (newPassword !== confirmPassword) {
       showNotification("error", "New passwords do not match.");
+      toast.error("New passwords do not match.");
       return;
     }
     if (newPassword.length < 8) {
       showNotification("error", "New password must be at least 8 characters long.");
+      toast.error("New password must be at least 8 characters long.");
       return;
     }
 
     setIsSaving(true);
     try {
+      const currentEmail = user?.email || "admin@kalnet.edu";
       const res = await fetch("/api/settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "security", currentPassword, newPassword, confirmPassword })
+        body: JSON.stringify({
+          type: "security",
+          currentEmail,
+          currentPassword,
+          newPassword,
+          confirmPassword
+        })
       });
       
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to update password");
       
       showNotification("success", "Password updated successfully.");
+      toast.success("Password updated successfully!");
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
     } catch (e: unknown) {
-      showNotification("error", e instanceof Error ? e.message : "An error occurred");
+      const errorMsg = e instanceof Error ? e.message : "An error occurred";
+      showNotification("error", errorMsg);
+      toast.error(errorMsg);
     } finally {
       setIsSaving(false);
     }

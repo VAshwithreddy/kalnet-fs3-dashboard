@@ -1,5 +1,6 @@
 import { prisma } from "./prisma";
 import { UserRole } from "@prisma/client";
+import crypto from "crypto";
 
 /* ============================================================
    Get Current User from Header
@@ -29,4 +30,12 @@ export function requireRole(user: any, roles: UserRole[]) {
   if (!user || !roles.includes(user.role)) {
     throw new Error("Forbidden: Insufficient role");
   }
+}
+
+/**
+ * Hashes a plain-text password using SHA-256 algorithm.
+ * Uses Node.js built-in crypto module for compatibility and simplicity.
+ */
+export function hashPassword(password: string): string {
+  return crypto.createHash("sha256").update(password).digest("hex");
 }

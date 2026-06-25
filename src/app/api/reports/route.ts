@@ -13,15 +13,14 @@ export async function GET(request: Request) {
       return errorResponse("BAD_REQUEST", "Missing 'type' query parameter");
     }
 
-    // Handle old/legacy types (activity, issues)
-    if (type === "activity" || type === "issues") {
-      const data = await getReports(type as any);
-      return successResponse(data);
-    }
-
-    // Handle new types (fees, admissions, approvals, leave)
     const fromParam = searchParams.get("from") || searchParams.get("startDate");
     const toParam = searchParams.get("to") || searchParams.get("endDate");
+
+    // Handle old/legacy types (activity, issues)
+    if (type === "activity" || type === "issues") {
+      const data = await getReports(type as any, fromParam ?? undefined, toParam ?? undefined);
+      return successResponse(data);
+    }
 
     // If dates are provided, or it is a new report type, we use plural getReport
     if (type === "fees" || type === "approvals" || type === "leave" || (type === "admissions" && fromParam)) {

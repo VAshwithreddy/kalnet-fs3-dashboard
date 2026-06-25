@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Edit2, ShieldAlert, AlertCircle, Users } from "lucide-react";
+import { Edit2, ShieldAlert, AlertCircle, Users, Search } from "lucide-react";
 import { TableSkeleton } from "@/components/Skeletons";
 import { EmptyState } from "@/components/EmptyState";
 import { ConfirmationModal } from "@/components/ConfirmationModal";
+import { EditUserModal } from "@/components/EditUserModal";
 import { toast } from "sonner";
 
 type Role = "ADMIN" | "TEACHER" | "STAFF";
@@ -31,6 +32,13 @@ export default function UsersPage() {
     nextValue: boolean | Role;
     userName: string;
   } | null>(null);
+
+  // Edit User Modal state
+  const [editUser, setEditUser] = useState<User | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  // Search state
+  const [searchQuery, setSearchQuery] = useState("");
 
   async function fetchUsers(isSilent = false) {
     if (!isSilent) setLoading(true);
@@ -67,6 +75,8 @@ export default function UsersPage() {
   }, []);
 
   const handleOpenConfirmStatus = (id: string, name: string, currentActive: boolean) => {
+    const targetUser = users.find(u => u.id === id);
+    if (targetUser?.role === 'ADMIN') return;
     setConfirmModal({
       isOpen: true,
       userId: id,
@@ -77,6 +87,8 @@ export default function UsersPage() {
   };
 
   const handleOpenConfirmRole = (id: string, name: string, nextRole: Role) => {
+    const targetUser = users.find(u => u.id === id);
+    if (targetUser?.role === 'ADMIN') return;
     setConfirmModal({
       isOpen: true,
       userId: id,
@@ -84,6 +96,39 @@ export default function UsersPage() {
       nextValue: nextRole,
       userName: name
     });
+  };
+
+  const handleOpenEditModal = (user: User) => {
+    if (user.role === 'ADMIN') return;
+    setEditUser(user);
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveUser = async (userId: string, updatedData: { name: string; email: string; role: Role }) => {
+    // Optimistic update
+    setUsers(users.map(u => u.id === userId ? { ...u, ...updatedData } : u));
+
+    try {
+      const res = await fetch(`/api/users/${userId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedData)
+      });
+
+      if (res.ok) {
+        toast.success(`User ${updatedData.name} updated successfully.`);
+        // Re-fetch to ensure DB sync
+        fetchUsers(true);
+      } else {
+        const errData = await res.json();
+        throw new Error(errData.error || "Failed to update user");
+      }
+    } catch (e: unknown) {
+      // Rollback optimistic update
+      fetchUsers(true);
+      toast.error(e instanceof Error ? e.message : "Failed to save changes to database.");
+      throw e;
+    }
   };
 
   const handleConfirmAction = async () => {
@@ -149,6 +194,16 @@ export default function UsersPage() {
     );
   }
 
+  const filteredUsers = users.filter(user => {
+    const query = searchQuery.toLowerCase().trim();
+    if (!query) return true;
+    return (
+      user.name.toLowerCase().includes(query) ||
+      user.email.toLowerCase().includes(query) ||
+      user.role.toLowerCase().includes(query)
+    );
+  });
+
   return (
     <div className="p-8">
       <div className="flex justify-between items-end mb-8">
@@ -169,64 +224,102 @@ export default function UsersPage() {
             description="Add your first user to start managing systems, permissions, and dashboards."
           />
         ) : (
-          <div className="overflow-x-auto animate-in fade-in duration-300">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-bg-card-hover border-b border-border">
-                  <th className="px-6 py-4 text-sm font-semibold text-text-secondary">Name / Email</th>
-                  <th className="px-6 py-4 text-sm font-semibold text-text-secondary">Role</th>
-                  <th className="px-6 py-4 text-sm font-semibold text-text-secondary">Last Login</th>
-                  <th className="px-6 py-4 text-sm font-semibold text-text-secondary">Status</th>
-                  <th className="px-6 py-4 text-sm font-semibold text-text-secondary text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((user) => (
-                  <tr key={user.id} className="border-b border-border hover:bg-bg-table-row transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="text-sm font-medium text-text-heading">{user.name}</div>
-                      <div className="text-xs text-text-secondary mt-1">{user.email}</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <select 
-                        value={user.role}
-                        onChange={(e) => handleOpenConfirmRole(user.id, user.name, e.target.value as Role)}
-                        className="bg-transparent text-sm border-b border-border pb-1 text-text-heading focus:outline-none focus:border-primary cursor-pointer [&>option]:bg-bg-card"
-                      >
-                        <option value="ADMIN">Admin</option>
-                        <option value="TEACHER">Teacher</option>
-                        <option value="STAFF">Staff</option>
-                      </select>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-text-secondary">{user.lastLogin}</td>
-                    <td className="px-6 py-4">
-                      <button 
-                        onClick={() => handleOpenConfirmStatus(user.id, user.name, user.isActive)}
-                        className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${user.isActive ? 'bg-primary' : 'bg-border'}`}
-                      >
-                        <span className="sr-only">Toggle Status</span>
-                        <span aria-hidden="true" className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${user.isActive ? 'translate-x-2' : '-translate-x-2'}`} />
-                      </button>
-                      <span className="ml-3 text-xs text-text-secondary font-medium">
-                        {user.isActive ? "Active" : "Disabled"}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex justify-end space-x-2">
-                        <button className="p-2 text-text-secondary hover:text-primary rounded-lg hover:bg-bg-card-hover transition-colors">
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                        {user.role === 'ADMIN' && (
-                          <button className="p-2 text-danger hover:text-white bg-danger/10 hover:bg-danger rounded-lg transition-colors">
-                            <ShieldAlert className="w-4 h-4" />
+          <div>
+            {/* Search Input */}
+            <div className="mb-6 max-w-md relative animate-in fade-in duration-300">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
+              <input
+                type="text"
+                placeholder="Search users by name, email, or role..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 pr-4 py-2.5 w-full bg-bg-app border border-border rounded-xl text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all text-text-heading"
+              />
+            </div>
+
+            {filteredUsers.length === 0 ? (
+              <div className="py-12 animate-in fade-in duration-300">
+                <EmptyState
+                  icon={Users}
+                  title="No users found"
+                  description={`No users match the search term "${searchQuery}".`}
+                />
+              </div>
+            ) : (
+              <div className="overflow-x-auto animate-in fade-in duration-300">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-bg-card-hover border-b border-border">
+                      <th className="px-6 py-4 text-sm font-semibold text-text-secondary">Name / Email</th>
+                      <th className="px-6 py-4 text-sm font-semibold text-text-secondary">Role</th>
+                      <th className="px-6 py-4 text-sm font-semibold text-text-secondary">Last Login</th>
+                      <th className="px-6 py-4 text-sm font-semibold text-text-secondary">Status</th>
+                      <th className="px-6 py-4 text-sm font-semibold text-text-secondary text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredUsers.map((user) => (
+                      <tr key={user.id} className="border-b border-border hover:bg-bg-table-row transition-colors">
+                        <td className="px-6 py-4">
+                          <div className="text-sm font-medium text-text-heading">{user.name}</div>
+                          <div className="text-xs text-text-secondary mt-1">{user.email}</div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <select 
+                            value={user.role}
+                            onChange={(e) => handleOpenConfirmRole(user.id, user.name, e.target.value as Role)}
+                            disabled={user.role === 'ADMIN'}
+                            className="bg-transparent text-sm border-b border-border pb-1 text-text-heading focus:outline-none focus:border-primary disabled:opacity-75 disabled:cursor-not-allowed cursor-pointer [&>option]:bg-bg-card"
+                          >
+                            <option value="ADMIN">Admin</option>
+                            <option value="TEACHER">Teacher</option>
+                            <option value="STAFF">Staff</option>
+                          </select>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-text-secondary">{user.lastLogin}</td>
+                        <td className="px-6 py-4">
+                          <button 
+                            onClick={() => handleOpenConfirmStatus(user.id, user.name, user.isActive)}
+                            disabled={user.role === 'ADMIN'}
+                            className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${user.isActive ? 'bg-primary' : 'bg-border'} ${user.role === 'ADMIN' ? 'opacity-60 cursor-not-allowed' : ''}`}
+                          >
+                            <span className="sr-only">Toggle Status</span>
+                            <span aria-hidden="true" className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${user.isActive ? 'translate-x-2' : '-translate-x-2'}`} />
                           </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                          <span className="ml-3 text-xs text-text-secondary font-medium">
+                            {user.isActive ? "Active" : "Disabled"}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex justify-end space-x-2">
+                            <button 
+                              onClick={() => handleOpenEditModal(user)}
+                              disabled={user.role === 'ADMIN'}
+                              className={`p-2 text-text-secondary rounded-lg transition-colors ${
+                                user.role === 'ADMIN' 
+                                  ? 'opacity-30 cursor-not-allowed' 
+                                  : 'hover:text-primary hover:bg-bg-card-hover'
+                              }`}
+                              title={user.role === 'ADMIN' ? "Admin accounts cannot be edited" : "Edit User"}
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </button>
+                            {user.role === 'ADMIN' && (
+                              <div 
+                                className="p-2 text-danger bg-danger/10 rounded-lg flex items-center justify-center cursor-default" 
+                                title="Admin Account Protected"
+                              >
+                                <ShieldAlert className="w-4 h-4" />
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -252,6 +345,17 @@ export default function UsersPage() {
           onCancel={() => setConfirmModal(null)}
         />
       )}
+
+      {/* Edit User Modal */}
+      <EditUserModal
+        isOpen={isEditModalOpen}
+        user={editUser}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setEditUser(null);
+        }}
+        onSave={handleSaveUser}
+      />
     </div>
   );
 }

@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -41,6 +41,7 @@ model User {
   role       UserRole @default(STAFF)
   status     String   @default("ACTIVE")
   department String?
+  password   String   @default("")
   activeStatuses StaffActiveStatus[]
   staffLeaves    StaffLeaveRequest[]
   createdAt DateTime @default(now())

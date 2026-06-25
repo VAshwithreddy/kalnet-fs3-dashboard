@@ -12,7 +12,7 @@ export function Shimmer({ className = "" }: { className?: string }) {
 // 1. MetricCardSkeleton matching MetricCard height/width
 export function MetricCardSkeleton() {
   return (
-    <div className="bg-bg-card border border-border p-6 rounded-2xl flex flex-col justify-between h-40 relative overflow-hidden">
+    <div className="bg-bg-card border border-border p-6 rounded-2xl flex flex-col justify-between min-h-[10rem] h-auto relative overflow-hidden">
       {/* Top section */}
       <div className="flex justify-between items-start">
         <Shimmer className="h-4.5 w-24" />

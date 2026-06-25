@@ -15,7 +15,7 @@ interface MetricCardProps {
 
 export function MetricCard({ title, value, trend, trendUp, icon: Icon, sparklineData }: MetricCardProps) {
   return (
-    <div className="bg-bg-card shadow-shadow-card border border-border p-6 rounded-2xl flex flex-col justify-between h-40 transition-all duration-300 hover:-translate-y-1 hover:shadow-shadow-elevated hover:bg-bg-card-hover backdrop-blur-md">
+    <div className="bg-bg-card shadow-shadow-card border border-border p-6 rounded-2xl flex flex-col justify-between min-h-[10rem] h-auto transition-all duration-300 hover:-translate-y-1 hover:shadow-shadow-elevated hover:bg-bg-card-hover backdrop-blur-md">
       <div className="flex justify-between items-start">
         <div className="text-text-secondary text-sm font-medium">{title}</div>
         <div className="p-2 bg-primary-ghost rounded-lg">
