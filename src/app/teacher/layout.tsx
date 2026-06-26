@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { CopySlash, LayoutDashboard, CalendarOff, ArrowLeft, PanelLeft, ClipboardList } from "lucide-react";
+import { CopySlash, LayoutDashboard, CalendarOff, ArrowLeft, PanelLeft, ClipboardList, GraduationCap } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
@@ -49,6 +49,7 @@ export default function TeacherLayout({ children }: { children: React.ReactNode 
 
   const navItems = [
     { name: "Dashboard", href: "/teacher/dashboard", icon: LayoutDashboard },
+    { name: "Student Directory", href: "/teacher/students", icon: GraduationCap },
     { name: "Student Leaves", href: "/teacher/leaves", icon: CalendarOff },
     { name: "My Requests", href: "/teacher/requests", icon: ClipboardList },
   ];

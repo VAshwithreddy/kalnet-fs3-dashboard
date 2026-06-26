@@ -79,11 +79,13 @@ async function main() {
     const numAdmissions = Math.floor(Math.random() * 30) + 15;
     
     for (let j = 0; j < numAdmissions; j++) {
+      const fn = firstNames[(j + i * 17) % firstNames.length];
+      const ln = lastNames[(j * 3 + i * 23) % lastNames.length];
       const student = await prisma.student.create({
         data: {
           admissionNo: `ADM-${ym}-${j.toString().padStart(3, '0')}`,
-          firstName: `Student${j}`,
-          lastName: `Last${i}${j}`,
+          firstName: fn,
+          lastName: ln,
           status: 'ACTIVE'
         }
       });

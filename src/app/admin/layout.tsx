@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { CopySlash, LayoutDashboard, Users, Settings, Activity, FileText, ArrowLeft, PanelLeft } from "lucide-react";
+import { CopySlash, LayoutDashboard, Users, Settings, Activity, FileText, ArrowLeft, PanelLeft, GraduationCap } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
@@ -114,6 +114,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const navItems = [
     { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
+    { name: "Student Directory", href: "/admin/students", icon: GraduationCap },
     { name: "Users", href: "/admin/users", icon: Users },
     { name: "Activity", href: "/admin/activity", icon: Activity },
     { name: "Reports", href: "/admin/reports", icon: FileText },

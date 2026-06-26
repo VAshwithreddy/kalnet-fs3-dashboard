@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { MetricCard } from "@/components/MetricCard";
+import StudentDirectory from "@/components/StudentDirectory";
 import { 
   GraduationCap, 
   UserCheck, 
@@ -93,12 +94,6 @@ export default function TeacherDashboard() {
   // Tab state
   const [activeTab, setActiveTab] = useState<"overview" | "students" | "attendance">("overview");
 
-  // Student directory states
-  const [students, setStudents] = useState<StudentDetail[]>([]);
-  const [studentsLoading, setStudentsLoading] = useState(false);
-  const [studentsError, setStudentsError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
-
   // Attendance states
   const getTodayDateString = () => {
     const d = new Date();
@@ -133,24 +128,7 @@ export default function TeacherDashboard() {
     }
   }
 
-  async function fetchStudents(isSilent = false) {
-    if (!isSilent) setStudentsLoading(true);
-    setStudentsError(null);
-    try {
-      const res = await fetch("/api/teacher/students");
-      if (res.ok) {
-        const data = await res.json();
-        setStudents(data);
-      } else {
-        if (!isSilent) setStudentsError("Failed to fetch students list.");
-      }
-    } catch (e) {
-      console.error(e);
-      if (!isSilent) setStudentsError("A network error occurred while loading students.");
-    } finally {
-      if (!isSilent) setStudentsLoading(false);
-    }
-  }
+
 
   async function fetchAttendance(dateStr: string, isSilent = false) {
     if (!isSilent) setAttendanceLoading(true);
@@ -193,9 +171,7 @@ export default function TeacherDashboard() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsDirty(false);
     setAttendanceSearchQuery("");
-    if (activeTab === "students") {
-      fetchStudents();
-    } else if (activeTab === "attendance") {
+    if (activeTab === "attendance") {
       fetchAttendance(selectedDate);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -205,9 +181,7 @@ export default function TeacherDashboard() {
     // Poll stats every 5 seconds to keep it synced with any database changes (e.g. from Prisma Studio)
     const interval = setInterval(() => {
       fetchDashboardData(true);
-      if (activeTab === "students") {
-        fetchStudents(true);
-      } else if (activeTab === "attendance") {
+      if (activeTab === "attendance") {
         fetchAttendance(selectedDate, true);
       }
     }, 5000);
@@ -274,13 +248,7 @@ export default function TeacherDashboard() {
     }
   };
 
-  const filteredStudents = students.filter(student => {
-    const search = searchQuery.toLowerCase().trim();
-    if (!search) return true;
-    const fullName = `${student.firstName} ${student.lastName}`.toLowerCase();
-    const admissionNo = (student.admissionNo || "").toLowerCase();
-    return fullName.includes(search) || admissionNo.includes(search);
-  });
+
 
   const filteredAttendanceStudents = attendanceStudents.filter(student => {
     const search = attendanceSearchQuery.toLowerCase().trim();
@@ -632,78 +600,10 @@ export default function TeacherDashboard() {
 
       {/* Student Data Tab */}
       {activeTab === "students" && (
-        <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-            <div>
-              <h2 className="text-xl font-bold text-text-heading">Student Directory</h2>
-              <p className="text-xs text-text-secondary mt-1">View list of all enrolled students in your classes.</p>
-            </div>
-            <div className="relative max-w-xs w-full">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
-              <input
-                type="text"
-                placeholder="Search students..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-border bg-bg-input text-text-heading rounded-xl text-sm focus:outline-none focus:border-primary transition-all"
-              />
-            </div>
-          </div>
-
-          <div className="bg-bg-card border border-border shadow-shadow-card rounded-2xl overflow-hidden p-6">
-            {studentsLoading ? (
-              <TableSkeleton columns={4} rows={5} />
-            ) : studentsError ? (
-              <div className="py-8 text-center text-danger">
-                <AlertCircle className="w-8 h-8 mx-auto mb-2" />
-                {studentsError}
-              </div>
-            ) : filteredStudents.length === 0 ? (
-              <EmptyState
-                icon={Users}
-                title="No Students Found"
-                description={searchQuery ? "No students match your search query." : "There are currently no students registered."}
-              />
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left">
-                  <thead>
-                    <tr className="border-b border-border text-sm text-text-secondary">
-                      <th className="pb-3 font-medium">Name</th>
-                      <th className="pb-3 font-medium">Admission No</th>
-                      <th className="pb-3 font-medium">Status</th>
-                      <th className="pb-3 font-medium">Enrolled Date</th>
-                    </tr>
-                  </thead>
-                  <tbody className="text-sm">
-                    {filteredStudents.map((student) => (
-                      <tr key={student.id} className="border-b border-border/40 last:border-0 hover:bg-bg-app/40 transition-colors">
-                        <td className="py-4 text-text-heading font-medium">
-                          {student.firstName} {student.lastName}
-                        </td>
-                        <td className="py-4 text-text-heading">
-                          {student.admissionNo || "-"}
-                        </td>
-                        <td className="py-4">
-                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-                            student.status === "ACTIVE" 
-                              ? "bg-green/10 text-green border border-green/20" 
-                              : "bg-danger/10 text-danger border border-danger/20"
-                          }`}>
-                            {student.status}
-                          </span>
-                        </td>
-                        <td className="py-4 text-text-secondary">
-                          {new Date(student.createdAt).toLocaleDateString()}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        </div>
+        <StudentDirectory 
+          title="Student Directory" 
+          subtitle="View list of all enrolled students in your classes, classified into sections." 
+        />
       )}
 
       {/* Mark Attendance Tab */}
