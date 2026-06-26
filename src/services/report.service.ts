@@ -30,11 +30,13 @@ export async function getReports(
   }
 
   if (type === "activity") {
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const hasFilters = startDate || endDate;
+    const filter = hasFilters ? dateFilter : {
+      gte: new Date(new Date().setDate(new Date().getDate() - 7))
+    };
     return prisma.auditLog.findMany({
       where: {
-        createdAt: { gte: sevenDaysAgo }
+        createdAt: filter
       },
       orderBy: { createdAt: "asc" }
     });

@@ -168,7 +168,7 @@ export default function DashboardPage() {
         </div>
         
         {/* Metric Card Skeletons */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6 gap-6">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-6">
           {Array.from({ length: 6 }).map((_, i) => (
             <MetricCardSkeleton key={i} />
           ))}
@@ -258,7 +258,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6 gap-6">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-6">
         {metrics.map((metric, index) => (
           <MetricCard 
             key={index}

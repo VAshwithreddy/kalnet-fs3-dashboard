@@ -15,7 +15,7 @@ export async function createUser(
 
   const user = await prisma.user.create({ data });
 
-  await logAudit("CREATE_USER", "USER", user.id);
+  await logAudit("CREATE_USER", "USER", user.id, { name: user.name });
 
   return user;
 }
@@ -36,7 +36,7 @@ export async function updateUser(
     data,
   });
 
-  await logAudit("UPDATE_USER", "USER", id);
+  await logAudit("UPDATE_USER", "USER", id, { name: user.name });
 
   return user;
 }

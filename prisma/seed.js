@@ -1,5 +1,10 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const crypto = require('crypto');
+
+function hashPassword(password) {
+  return crypto.createHash('sha256').update(password).digest('hex');
+}
 
 function generatePastMonths(numMonths) {
   const months = [];
@@ -34,7 +39,13 @@ async function main() {
   const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez', 'Hernandez', 'Lopez', 'Gonzalez', 'Wilson', 'Anderson', 'Thomas', 'Taylor', 'Moore', 'Jackson', 'Martin', 'Lee', 'Perez', 'Thompson', 'White', 'Harris', 'Sanchez', 'Clark', 'Ramirez', 'Lewis', 'Robinson'];
 
   const usersData = [
-    { email: 'admin@kalnet.edu', name: 'Super Admin', role: 'ADMIN', status: 'ACTIVE' },
+    { 
+      email: 'admin@kalnet.edu', 
+      name: 'Super Admin', 
+      role: 'ADMIN', 
+      status: 'ACTIVE',
+      password: hashPassword('admin123')
+    },
   ];
 
   for (let i = 0; i < 35; i++) {
@@ -43,11 +54,14 @@ async function main() {
     const role = userRoles[Math.floor(Math.random() * userRoles.length)];
     const status = userStatuses[Math.floor(Math.random() * userStatuses.length)];
     
+    const defaultPassword = role === 'ADMIN' ? 'admin123' : 'teacher123';
+
     usersData.push({
       email: `${fn.toLowerCase()}.${ln.toLowerCase()}${i}@kalnet.edu`,
       name: `${fn} ${ln}`,
       role: role,
-      status: status
+      status: status,
+      password: hashPassword(defaultPassword)
     });
   }
 

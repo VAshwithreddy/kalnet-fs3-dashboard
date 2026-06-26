@@ -74,18 +74,24 @@ function getRelativeTime(dateStr: string) {
   return date.toLocaleDateString();
 }
 
-function getEntityLabel(log: AuditLog) {
+function getEntityLabel(log: AuditLog, usersMap: Record<string, string> = {}) {
   const meta = (() => {
     try { return log.meta ? JSON.parse(log.meta) : null; } catch { return null; }
   })();
 
   if (meta?.studentName) return meta.studentName;
   if (meta?.name) return meta.name;
+
+  if (log.entity.toUpperCase() === "USER" && usersMap[String(log.entityId)]) {
+    return usersMap[String(log.entityId)];
+  }
+
   return `${log.entity} #${log.entityId}`;
 }
 
 export default function ActivityPage() {
   const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [usersMap, setUsersMap] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -99,6 +105,17 @@ export default function ActivityPage() {
         setError(null);
       } else {
         if (!isSilent) setError("Failed to load activity logs.");
+      }
+
+      // Fetch users list to resolve User names dynamically
+      const resUsers = await fetch("/api/users");
+      if (resUsers.ok) {
+        const usersData = await resUsers.json();
+        const map: Record<string, string> = {};
+        usersData.users.forEach((u: any) => {
+          map[String(u.id)] = u.name;
+        });
+        setUsersMap(map);
       }
     } catch (e) {
       console.error(e);
@@ -169,7 +186,7 @@ export default function ActivityPage() {
               {logs.map((log, index) => {
                 const config = getActivityConfig(log);
                 const Icon = config.icon;
-                const entityLabel = getEntityLabel(log);
+                const entityLabel = getEntityLabel(log, usersMap);
                 return (
                   <div key={log.id} className="relative flex gap-4">
                     {/* Timeline connector */}
