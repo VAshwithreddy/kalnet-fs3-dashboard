@@ -24,8 +24,8 @@ const formatXAxis = (tickItem: string) => {
 };
 
 const formatYAxisRight = (value: number) => {
-  if (value === 0) return "$0";
-  return `$${Math.round(value / 1000)}k`;
+  if (value === 0) return "₹0";
+  return `₹${Math.round(value / 1000)}k`;
 };
 
 export function TrendChart() {
@@ -96,7 +96,7 @@ export function TrendChart() {
                 contentStyle={{ backgroundColor: 'var(--bg-tooltip)', border: 'none', borderRadius: '8px', color: 'var(--text-on-primary)' }}
                 itemStyle={{ color: 'var(--text-on-primary)' }}
                 formatter={(value, name) => {
-                  if (name === 'Pending Fees') return [`$${Number(value).toLocaleString()}`, 'Pending Fees'];
+                  if (name === 'Pending Fees') return [`₹${Number(value).toLocaleString()}`, 'Pending Fees'];
                   return [value, name];
                 }}
               />

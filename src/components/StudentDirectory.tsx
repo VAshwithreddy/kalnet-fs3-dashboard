@@ -129,22 +129,47 @@ export default function StudentDirectory({ title = "Student Directory", subtitle
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
         <div>
           <h1 className="text-3xl font-bold text-text-heading tracking-tight">{title}</h1>
           <p className="text-text-secondary mt-2">{subtitle}</p>
         </div>
         
-        {/* Search Bar */}
-        <div className="relative max-w-xs w-full">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
-          <input
-            type="text"
-            placeholder="Search name, class, section, ID..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 border border-border bg-bg-input text-text-heading rounded-xl text-sm focus:outline-none focus:border-primary transition-all"
-          />
+        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center w-full lg:w-auto">
+          {/* Class Selector Dropdown */}
+          {!isSearching && (
+            <div className="relative min-w-[220px]">
+              <GraduationCap className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none" />
+              <select
+                value={activeGroup}
+                onChange={(e) => setActiveGroup(e.target.value)}
+                className="w-full pl-10 pr-8 py-2.5 border border-border bg-bg-input text-text-heading rounded-xl text-sm focus:outline-none focus:border-primary transition-all appearance-none cursor-pointer"
+              >
+                {groupsList.map((groupName) => (
+                  <option key={groupName} value={groupName} className="bg-bg-card">
+                    {groupName} ({groupsMap[groupName]} students)
+                  </option>
+                ))}
+              </select>
+              <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
+                <svg className="w-4 h-4 text-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+          )}
+
+          {/* Search Bar */}
+          <div className="relative max-w-xs w-full">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
+            <input
+              type="text"
+              placeholder="Search name, class, section, ID..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 border border-border bg-bg-input text-text-heading rounded-xl text-sm focus:outline-none focus:border-primary transition-all"
+            />
+          </div>
         </div>
       </div>
 
@@ -162,35 +187,6 @@ export default function StudentDirectory({ title = "Student Directory", subtitle
         </div>
       ) : (
         <>
-          {/* Section Selector Tabs (only shown when not searching) */}
-          {!isSearching && (
-            <div className="flex border-b border-border gap-2 overflow-x-auto pb-1 scrollbar-thin scrollbar-thumb-border">
-              {groupsList.map((groupName) => {
-                const isActive = activeGroup === groupName;
-                return (
-                  <button
-                    key={groupName}
-                    onClick={() => setActiveGroup(groupName)}
-                    className={`flex items-center gap-2 px-5 py-3 border-b-2 font-medium text-sm transition-all duration-200 cursor-pointer whitespace-nowrap ${
-                      isActive
-                        ? "border-primary text-primary"
-                        : "border-transparent text-text-secondary hover:text-text-heading"
-                    }`}
-                  >
-                    <GraduationCap className="w-4 h-4" />
-                    {groupName}
-                    <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
-                      isActive
-                        ? "bg-primary-ghost text-primary"
-                        : "bg-bg-card-hover text-text-muted"
-                    }`}>
-                      {groupsMap[groupName]}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          )}
 
           {/* Student List Table */}
           <div className="bg-bg-card border border-border shadow-shadow-card rounded-2xl overflow-hidden p-6">
@@ -201,16 +197,16 @@ export default function StudentDirectory({ title = "Student Directory", subtitle
                 description={isSearching ? `No students found matching "${searchQuery}".` : "No students in this section."}
               />
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left">
-                  <thead>
+              <div className="overflow-x-auto max-h-[500px] overflow-y-auto scrollbar-thin scrollbar-thumb-border pr-2">
+                <table className="w-full min-w-[800px] text-left border-collapse">
+                  <thead className="sticky top-0 bg-bg-card z-10">
                     <tr className="border-b border-border text-sm text-text-secondary">
-                      <th className="pb-3 px-2 font-medium">Student Name</th>
-                      <th className="pb-3 px-2 font-medium">Admission No</th>
-                      <th className="pb-3 px-2 font-medium">Class</th>
-                      <th className="pb-3 px-2 font-medium">Section</th>
-                      <th className="pb-3 px-2 font-medium">Status</th>
-                      <th className="pb-3 px-2 font-medium">Enrolled Date</th>
+                      <th className="pb-3 px-2 font-medium bg-bg-card">Student Name</th>
+                      <th className="pb-3 px-2 font-medium bg-bg-card">Admission No</th>
+                      <th className="pb-3 px-2 font-medium bg-bg-card">Class</th>
+                      <th className="pb-3 px-2 font-medium bg-bg-card">Section</th>
+                      <th className="pb-3 px-2 font-medium bg-bg-card">Status</th>
+                      <th className="pb-3 px-2 font-medium bg-bg-card">Enrolled Date</th>
                     </tr>
                   </thead>
                   <tbody className="text-sm">
