@@ -220,7 +220,7 @@ export default function ReportsPage() {
                   <td className="px-6 py-4 text-sm text-text-secondary">{row.date}</td>
                   <td className="px-6 py-4 text-sm text-text-secondary">{row.type}</td>
                   <td className="px-6 py-4 text-sm text-text-secondary">{row.student}</td>
-                  <td className="px-6 py-4 text-sm text-text-secondary">{row.amount > 0 ? `$${row.amount}` : '-'}</td>
+                  <td className="px-6 py-4 text-sm text-text-secondary">{row.amount > 0 ? `₹${row.amount}` : '-'}</td>
                   <td className="px-6 py-4 text-sm">
                     <span className={`px-2.5 py-1 rounded-full text-xs font-semibold shadow-sm ${
                       row.status === 'Completed' ? 'bg-green text-white' :

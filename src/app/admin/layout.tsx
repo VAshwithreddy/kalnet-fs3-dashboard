@@ -66,9 +66,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         "Metric,Value",
         `Total Students Enrolled,${data.studentsEnrolled || 0}`,
         `Pending Approvals,${data.approvalsPending || 0}`,
-        `Outstanding Fees ($),${data.outstandingFees || 0}`,
+        `Outstanding Fees (₹),${data.outstandingFees || 0}`,
         `New Admissions This Month,${data.newAdmissionsThisMonth || 0}`,
-        `Fees Collected This Month ($),${data.feesCollectedThisMonth || 0}`,
+        `Fees Collected This Month (₹),${data.feesCollectedThisMonth || 0}`,
         `Pending Leave Requests,${data.leavePending || 0}`
       ].join("\n");
 

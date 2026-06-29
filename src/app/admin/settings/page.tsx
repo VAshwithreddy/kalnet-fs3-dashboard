@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Save, Bell, Shield, User as UserIcon, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { Save, Shield, User as UserIcon, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 
@@ -207,17 +207,6 @@ export default function SettingsPage() {
             <Shield className={`w-5 h-5 mr-3 ${activeTab === "security" ? "text-primary" : ""}`} />
             Security
           </button>
-          <button 
-            onClick={() => setActiveTab("notifications")}
-            className={`w-full flex items-center px-4 py-3 rounded-xl transition-all ${
-              activeTab === "notifications" 
-                ? "bg-primary-ghost text-primary font-medium" 
-                : "text-text-secondary hover:text-text-heading hover:bg-bg-card-hover"
-            }`}
-          >
-            <Bell className={`w-5 h-5 mr-3 ${activeTab === "notifications" ? "text-primary" : ""}`} />
-            Notifications
-          </button>
         </div>
 
         {/* Settings Content */}
@@ -342,12 +331,6 @@ export default function SettingsPage() {
                   </button>
                 </div>
               </div>
-            </div>
-          )}
-
-          {activeTab === "notifications" && (
-            <div className="py-12 text-center text-text-secondary">
-              <p>This section is under construction.</p>
             </div>
           )}
         </div>

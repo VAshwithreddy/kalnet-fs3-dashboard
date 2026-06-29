@@ -243,7 +243,7 @@ export default function DashboardPage() {
   const metrics = [
     { title: "Total Students", value: stats ? stats.studentsEnrolled?.toLocaleString() : "-", trend: "+5.2%", trendUp: true, icon: GraduationCap, sparklineData: getStudentsTrend() },
     { title: "Active Staff", value: stats ? stats.totalStaff?.toLocaleString() : "-", trend: "0%", trendUp: true, icon: UserCheck, sparklineData: [stats?.totalStaff ?? 0, stats?.totalStaff ?? 0, stats?.totalStaff ?? 0, stats?.totalStaff ?? 0, stats?.totalStaff ?? 0, stats?.totalStaff ?? 0, stats?.totalStaff ?? 0] },
-    { title: "Pending Fees", value: stats ? `$${stats.outstandingFees?.toLocaleString()}` : "-", trend: "-12.5%", trendUp: true, icon: BadgeDollarSign, sparklineData: getFeesTrend() },
+    { title: "Pending Fees", value: stats ? `₹${stats.outstandingFees?.toLocaleString()}` : "-", trend: "-12.5%", trendUp: true, icon: BadgeDollarSign, sparklineData: getFeesTrend() },
     { title: "New Admissions", value: stats ? stats.newAdmissionsThisMonth?.toLocaleString() : "-", trend: "+14.0%", trendUp: true, icon: UserPlus, sparklineData: getAdmissionsTrend() },
     { title: "Leave Requests", value: stats ? stats.leavePending?.toString() : "-", trend: "+2", trendUp: false, icon: CalendarOff, sparklineData: getLeaveTrend() },
     { title: "Pending Approvals", value: stats ? stats.approvalsPending?.toString() : "-", trend: "-4", trendUp: true, icon: ClipboardCheck, sparklineData: getApprovalsTrend() },
